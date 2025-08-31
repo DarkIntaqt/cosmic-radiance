@@ -46,5 +46,4 @@ This rate limiter is by no means feature complete, however it should be able to 
 This project is licensed under the Apache 2.0 License. 
 
 
----
 [^1]: Tested with 100 available request per second (rps) in which the average was 99rps.
