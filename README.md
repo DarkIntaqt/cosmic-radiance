@@ -1,5 +1,9 @@
 # Cosmic-Radiance
 
+![Go Version](https://img.shields.io/badge/go-1.24.4+-blue?style=flat-square)
+[![Issues](https://img.shields.io/github/issues/DarkIntaqt/cosmic-radiance?style=flat-square)](https://github.com/DarkIntaqt/cosmic-radiance/issues)
+[![License](https://img.shields.io/github/license/darkintaqt/cosmic-radiance?style=flat-square)](https://github.com/DarkIntaqt/cosmic-radiance/blob/main/LICENSE)
+
 Just another Riot Games API rate limiter with a cosmic glance ✨. 
 
 ## Features
@@ -8,8 +12,11 @@ Just another Riot Games API rate limiter with a cosmic glance ✨.
 - Automatic rate limit discovery
 - Customizable Timeout and good Retry-After handling
 - GZIP handling to reduce traffic
+- Prioritize requests with a `X-Priority: high` header
 - Prometheus metrics to create dashboards about the rate limit status and queue sizes
 - up to 99% close to uptime rate limits[^1]
+
+###
 
 ## Getting started
 
@@ -27,9 +34,25 @@ Finally, run the project with
 go run cmd/cosmic-radiance/main.go
 ```
 
+Then, you can start requesting `http://localhost:PORT/<platform>/<method>` or `http://<platform>.api.riotgames.com/<method> (with proxy-pass)`, based on your `MODE` (see configuration). 
+
+## Configuration
+
+There are several .env variables which can fine tune cosmic-radiance. Some are required
+
+| Name                 | Function                                                                                                                                                                                                                                                                             |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| API_KEY **required** | Your Riot Games API key. Cosmic-radiance needs your key to fire requests to the Riot Games API.                                                                                                                                                                                      |
+| PORT **required**    | Port on which the proxy is running. Chose a port that is free. Please double-check your port and Dockerfile configuration.                                                                                                                                                           |
+| MODE **required**    | Either `PATH` or `PROXY`. In path mode, you request cosmic-radiance like a normal webserver with the endpoint following the endpoint. In the proxy mode, you can use proxy-pass to redirect <platform>.api.riotgames.com requests directly to cosmic-radiance. You need to use http. |
+| TIMEOUT              | The wait time after which incoming requests are getting rejected. Time in seconds                                                                                                                                                                                                    |
+| PRIORITY_QUEUE_SIZE  | The size of the priority queue compared to the normal queue. In percent (%).                                                                                                                                                                                                         |
+| PROMETHEUS           | Either `ON` or `OFF`. Disabled by default. Enable to get prometheus statistics                                                                                                                                                                                                       |
+
+
 ## Error Codes
 
-All error codes are returned as by the Riot Games API. There were a few additionall error codes added. 
+All error codes are returned as by the Riot Games API. There were a few additional error codes added. 
 
 |  Code   | Where to be found | What does this mean                                              |
 | :-----: | ----------------- | ---------------------------------------------------------------- |
