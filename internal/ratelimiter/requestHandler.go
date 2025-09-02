@@ -29,7 +29,7 @@ func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var syntax *schema.Syntax
 
 	// Determine the endpoints by using the proxy mode
-	if configs.Mode == configs.ProxyMode {
+	if configs.RequestMode == configs.ProxyMode {
 		schema, err := schema.NewProxySyntax(r.URL.Host, path)
 		if err != nil {
 			w.Header().Set("Retry-After", "60")

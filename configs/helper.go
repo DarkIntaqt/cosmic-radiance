@@ -10,14 +10,15 @@ import (
 	"github.com/DarkIntaqt/cosmic-radiance/internal/utils"
 )
 
-type RequestMode = bool
+type requestMode = bool
 
+// Request modes for the Proxy. The path mode ignores the host, the proxy mode uses the host to get the Riot Games API URL.
 const (
-	PathMode  RequestMode = false
-	ProxyMode RequestMode = true
+	PathMode  requestMode = false
+	ProxyMode requestMode = true
 )
 
-func validateMode(mode string) RequestMode {
+func validateMode(mode string) requestMode {
 	switch strings.ToLower(mode) {
 	case "path":
 		return PathMode
@@ -32,7 +33,7 @@ func parseTimeout(timeout string) time.Duration {
 	duration, err := time.ParseDuration(timeout + "s")
 	if err != nil {
 		log.Printf("Failed to parse env timeout, falling back to default: %v", err)
-		return DEFAULT_TIMEOUT_DURATION
+		return DEFAULT_INCOMING_REQUEST_TIMEOUT
 	}
 
 	return duration

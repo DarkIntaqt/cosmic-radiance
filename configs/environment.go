@@ -1,6 +1,7 @@
 package configs
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -9,22 +10,20 @@ import (
 
 // This file parses all environment variables related to configuration.
 
-var (
-	// API key to access the Riot Games API
-	ApiKeys []string = strings.Split(utils.GetEnvString("API_KEY"), ",")
+// API key to access the Riot Games API
+var ApiKeys []string = strings.Split(utils.GetEnvString("API_KEY"), ",")
 
-	// Port cosmic-radiance will be running on
-	Port int = utils.GetEnvInt("PORT")
+// Port cosmic-radiance will be running on
+var Port int = utils.GetEnvInt("PORT")
 
-	// Mode cosmic-radiance will be running in, either PATH or PROXY for different request syntax
-	Mode RequestMode = validateMode(utils.GetEnvString("MODE"))
+// Mode cosmic-radiance will be running in, either PATH or PROXY for different request syntax
+var RequestMode requestMode = validateMode(utils.GetEnvString("MODE"))
 
-	// Timeout for requests
-	Timeout time.Duration = parseTimeout(utils.GetSoftEnvString("TIMEOUT", DEFAULT_TIMEOUT_STRING))
+// Timeout for requests
+var Timeout time.Duration = parseTimeout(utils.GetSoftEnvString("TIMEOUT", fmt.Sprintf("%d", DEFAULT_INCOMING_REQUEST_TIMEOUT.Seconds())))
 
-	// Size of priority in percent
-	PriorityQueueSize float32 = handlePriorityQueueSize()
+// Size of priority in percent
+var PriorityQueueSize float32 = handlePriorityQueueSize()
 
-	// Enable or disable Prometheus metrics
-	PrometheusEnabled bool = strings.ToLower(utils.GetSoftEnvString("PROMETHEUS", "OFF")) == "on"
-)
+// Enable or disable Prometheus metrics
+var PrometheusEnabled bool = strings.ToLower(utils.GetSoftEnvString("PROMETHEUS", "OFF")) == "on"
