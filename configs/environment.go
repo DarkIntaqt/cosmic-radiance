@@ -20,7 +20,7 @@ var Port int = utils.GetEnvInt("PORT")
 var RequestMode requestMode = validateMode(utils.GetEnvString("MODE"))
 
 // Timeout for requests
-var Timeout time.Duration = parseTimeout(utils.GetSoftEnvString("TIMEOUT", fmt.Sprintf("%d", DEFAULT_INCOMING_REQUEST_TIMEOUT.Seconds())))
+var Timeout time.Duration = parseTimeout(utils.GetSoftEnvString("TIMEOUT", fmt.Sprintf("%d", int(DEFAULT_INCOMING_REQUEST_TIMEOUT.Seconds()))))
 
 // Size of priority in percent
 var PriorityQueueSize float32 = handlePriorityQueueSize()
