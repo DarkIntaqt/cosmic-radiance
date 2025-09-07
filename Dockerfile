@@ -25,8 +25,10 @@ WORKDIR /
 # Copy the built binary from the builder stage
 COPY --from=builder /app/cosmic-radiance .
 
+# Set the port to 8001, always. The port in the .env file has to be ignored to expose the correct port
+ENV PORT=8001
+
 # Expose the application's port
-# TODO: this probably doesn't work in all cases
 EXPOSE 8001
 
 # Command to run the application

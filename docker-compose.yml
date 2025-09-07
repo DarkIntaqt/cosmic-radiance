@@ -1,0 +1,14 @@
+services:
+  cosmic-radiance:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cosmic-radiance
+    ports:
+      - "${PORT:-8001}:8001"
+    environment:
+      - API_KEY=${API_KEY:-}
+      - MODE=${MODE:-}
+      - TIMEOUT=${TIMEOUT:-}
+      - PRIORITY_QUEUE_SIZE=${PRIORITY_QUEUE_SIZE:-}
+      - PROMETHEUS=${PROMETHEUS:-}
