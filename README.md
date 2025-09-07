@@ -18,23 +18,24 @@ Just another Riot Games API rate limiter with a cosmic glance ✨.
 
 ###
 
-## Getting started
+## Getting started 
 
 To get started, clone the project from GitHub.  
-After that, install the dependencies with:
 
-```sh
-go mod tidy
+```
+git clone https://github.com/DarkIntaqt/cosmic-radiance.git
 ```
 
 Next, you need to set a few environment variables. For that, you can copy the .env.example and adjust the settings to your needs.  
-Finally, run the project with
+Finally, run the project in a docker container with: 
 
-```sh
-go run cmd/cosmic-radiance/main.go
+```
+docker compose up -d
 ```
 
 Then, you can start requesting `http://localhost:PORT/<platform>/<method>` or `http://<platform>.api.riotgames.com/<method> (with proxy-pass)`, based on your `MODE` (see configuration). 
+
+Otherwise, you can run the project manually by installing the dependencies with `go mod tidy` and then run it with `go run cmd/cosmic-radiance/main.go`.
 
 ## Configuration
 
