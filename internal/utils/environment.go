@@ -15,6 +15,10 @@ func GetEnvString(key string) string {
 		panic("Environment variable " + key + " not set")
 	}
 
+	if value == "" {
+		panic("Environment variable " + key + " is empty")
+	}
+
 	return value
 }
 
@@ -22,6 +26,10 @@ func GetEnvString(key string) string {
 func GetSoftEnvString(key string, defaultValue string) string {
 	value, exists := os.LookupEnv(key)
 	if !exists {
+		return defaultValue
+	}
+
+	if value == "" {
 		return defaultValue
 	}
 
