@@ -118,7 +118,10 @@ func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Copy relevant headers from Riot API response to our response
-		importantHeaders := []string{"Content-Type", "X-App-Rate-Limit-Count", "X-App-Rate-Limit", "X-Method-Rate-Limit-Count", "X-Method-Rate-Limit", "Content-Encoding", "Retry-After", "X-Rate-Limit-Type"}
+		importantHeaders := []string{
+			"Content-Type", "Content-Encoding", "Content-Length",
+			"X-App-Rate-Limit-Count", "X-App-Rate-Limit", "X-Method-Rate-Limit-Count", "X-Method-Rate-Limit", "Retry-After", "X-Rate-Limit-Type",
+		}
 		for _, key := range importantHeaders {
 			if values := riotApiRequest.Header[key]; len(values) > 0 {
 				w.Header()[key] = values
