@@ -92,12 +92,12 @@ func (rlc *RateLimitCategory) Update(limit string, count string, retryAfter *tim
 				currentReqs = 0
 			}
 
-			rlc.RateLimits[i] = &RateLimit{
+			rlc.RateLimits = append(rlc.RateLimits, &RateLimit{
 				Window:     duration,
 				Limit:      capacity,
 				Current:    currentReqs,
 				LastRefill: lastRefill,
-			}
+			})
 		}
 
 		ratelimit := rlc.RateLimits[i]
