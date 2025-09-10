@@ -65,7 +65,7 @@ func (rlc *RateLimitCategory) Update(limit string, count string, retryAfter *tim
 
 			// We puddle along the original limit
 			// If the limit Riot gave us is higher than ours (which shouldnt be happening), update ours accordingly
-			if rlc.RateLimits[i].Limit != capacity && currentReqs != current {
+			if rlc.RateLimits[i].Limit != capacity && currentReqs < current {
 				log.Printf("Updating current rate limit from %d to %d with window %d\n", currentReqs, current, duration)
 				currentReqs = current
 			}
@@ -92,12 +92,12 @@ func (rlc *RateLimitCategory) Update(limit string, count string, retryAfter *tim
 				currentReqs = 0
 			}
 
-			rlc.RateLimits = append(rlc.RateLimits, &RateLimit{
+			rlc.RateLimits[i] = &RateLimit{
 				Window:     duration,
 				Limit:      capacity,
 				Current:    currentReqs,
 				LastRefill: lastRefill,
-			})
+			}
 		}
 
 		ratelimit := rlc.RateLimits[i]

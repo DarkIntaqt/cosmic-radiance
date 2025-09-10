@@ -55,10 +55,8 @@ func getAllowedPattern() allowedPattern {
 				Method: strings.TrimPrefix(path, "/"),
 				Id:     id,
 			})
-
 		}
 	}
 
 	return allowedPatterns
-
 }
