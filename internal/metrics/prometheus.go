@@ -67,7 +67,7 @@ func UpdateQueueSizes(qm *queue.QueueManager) {
 	for platform, methods := range schema.AllowedPattern {
 		for _, endpoint := range methods {
 			id := endpoint.Id
-			method := "/" + endpoint.Method
+			method := endpoint.Method
 
 			if queue, Ok := qm.Queues[id]; Ok {
 				queueSize.WithLabelValues(platform, method, "normal").Set(float64(queue.Size()))
