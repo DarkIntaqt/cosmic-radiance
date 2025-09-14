@@ -104,6 +104,7 @@ func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			if configs.PrometheusEnabled {
 				metrics.UpdateResponseCodes(response.KeyId, syntax.Platform, syntax.Endpoint, 500)
 			}
+			rl.refundRequest(syntax, priority, response.KeyId)
 			return
 		}
 
@@ -115,6 +116,8 @@ func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		if riotApiRequest.StatusCode == http.StatusTooManyRequests || (response.Update && riotApiRequest.StatusCode == http.StatusOK) {
 			rl.updateRatelimits(syntax, riotApiRequest, response.KeyId, priority)
+		} else if riotApiRequest.StatusCode >= 500 {
+			rl.refundRequest(syntax, priority, response.KeyId)
 		}
 
 		// Copy relevant headers from Riot API response to our response
@@ -136,4 +139,8 @@ func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			log.Printf("Error writing response: %v", err)
 		}
 	}
+}
+
+func (rl *RateLimiter) refundRequest(syntax *schema.Syntax, priority request.Priority, keyId int) {
+	rl.refundChannel <- Refund{Syntax: syntax, Priority: priority, KeyId: keyId}
 }
