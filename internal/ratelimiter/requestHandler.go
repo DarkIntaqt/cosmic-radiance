@@ -142,8 +142,5 @@ func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (rl *RateLimiter) refundRequest(syntax *schema.Syntax, priority request.Priority, keyId int) {
-	queue := rl.queueManager.GetQueue(*syntax, priority)
-	if queue != nil {
-		queue.Refund(keyId)
-	}
+	rl.refundChannel <- Refund{Syntax: syntax, Priority: priority, KeyId: keyId}
 }
