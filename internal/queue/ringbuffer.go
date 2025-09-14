@@ -57,5 +57,5 @@ func (rb *RingBuffer) Refund(keyId int) {
 	if keyId < 0 || keyId >= len(*rb.Limits) {
 		return
 	}
-	(*rb.Limits)[keyId].Refund()
+	(*rb.Limits)[keyId].Refund(time.Now())
 }
