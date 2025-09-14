@@ -52,3 +52,10 @@ func newRingBuffer(limits *resource.RateLimitGroupSlice, priority request.Priori
 func (rb *RingBuffer) Count() int64 {
 	return rb.count
 }
+
+func (rb *RingBuffer) Refund(keyId int) {
+	if keyId < 0 || keyId >= len(*rb.Limits) {
+		return
+	}
+	(*rb.Limits)[keyId].Refund()
+}

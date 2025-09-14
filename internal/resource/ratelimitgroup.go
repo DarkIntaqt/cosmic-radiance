@@ -105,3 +105,24 @@ func (rlg *RateLimitGroup) TryAllow(now time.Time, priority request.Priority) bo
 
 	return true
 }
+
+/*
+Refunds a request.
+Inverse of TryAllow.
+*/
+func (rlg *RateLimitGroup) Refund() {
+	// Decrease all limits by one
+	for i := range rlg.PlatformLimits.RateLimits {
+		rl := rlg.PlatformLimits.RateLimits[i]
+		if rl.Current > 0 {
+			rl.Current--
+		}
+	}
+
+	for i := range rlg.MethodLimits.RateLimits {
+		rl := rlg.MethodLimits.RateLimits[i]
+		if rl.Current > 0 {
+			rl.Current--
+		}
+	}
+}
