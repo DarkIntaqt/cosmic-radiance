@@ -37,6 +37,9 @@ Then, you can start requesting `http://localhost:PORT/<platform>/<method>` or `h
 
 Otherwise, you can run the project manually by installing the dependencies with `go mod tidy` and then run it with `go run cmd/cosmic-radiance/main.go`.
 
+> [!WARNING]
+> If you want to deploy cosmic-radiance to production, please use a [tagged version](https://github.com/DarkIntaqt/cosmic-radiance/releases), since development may take place in the main branch.
+
 ## Configuration
 
 There are several .env variables which can fine tune cosmic-radiance. Some are required
