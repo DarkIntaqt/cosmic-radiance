@@ -41,6 +41,9 @@ docker compose up -d
 ```
 
 Then, you can start requesting `http://localhost:PORT/<platform>/<method>` or `http://<platform>.api.riotgames.com/<method> (with proxy-pass)`, based on your `MODE` (see configuration). 
+
+---
+
 </details>
 
 <details>
@@ -68,6 +71,9 @@ go run cmd/cosmic-radiance/main.go
 ```
 
 Then, you can start requesting `http://localhost:PORT/<platform>/<method>` or `http://<platform>.api.riotgames.com/<method> (with proxy-pass)`, based on your `MODE` (see configuration). 
+
+---
+
 </details>
 
 <details>
@@ -102,6 +108,9 @@ func main() {
 ```
 
 Then, you can start requesting `http://localhost:PORT/<platform>/<method>` or `http://<platform>.api.riotgames.com/<method> (with proxy-pass)`, based on your `MODE` (see configuration). 
+
+---
+
 </details>
 
 
