@@ -20,7 +20,14 @@ Just another Riot Games API rate limiter with a cosmic glance ✨.
 
 ## Getting started 
 
-To get started, clone the project from GitHub.  
+Click on the option that suits you best. For a normal production use-case, Docker is recommended.
+
+<details>
+<summary>Docker</summary>
+
+### Docker
+
+To get started with Docker, clone the project from GitHub.
 
 ```
 git clone https://github.com/DarkIntaqt/cosmic-radiance.git
@@ -34,8 +41,69 @@ docker compose up -d
 ```
 
 Then, you can start requesting `http://localhost:PORT/<platform>/<method>` or `http://<platform>.api.riotgames.com/<method> (with proxy-pass)`, based on your `MODE` (see configuration). 
+</details>
 
-Otherwise, you can run the project manually by installing the dependencies with `go mod tidy` and then run it with `go run cmd/cosmic-radiance/main.go`.
+<details>
+<summary>Go (CLI)</summary>
+
+### Go (CLI)
+
+To get started with Go, clone the project from GitHub.
+
+```
+git clone https://github.com/DarkIntaqt/cosmic-radiance.git
+```
+
+Next, you need to set a few environment variables. For that, you can copy the .env.example and adjust the settings to your needs.  
+After that, you need to install the dependencies using:
+
+```
+go mod tidy
+```
+
+Finally, you can start the project with 
+
+```
+go run cmd/cosmic-radiance/main.go
+```
+
+Then, you can start requesting `http://localhost:PORT/<platform>/<method>` or `http://<platform>.api.riotgames.com/<method> (with proxy-pass)`, based on your `MODE` (see configuration). 
+</details>
+
+<details>
+<summary>Go (package)</summary>
+
+### Go (package)
+
+To get started with using cosmic-radiance as a go package, install the package into your current workspace
+
+```
+go get github.com/DarkIntaqt/cosmic-radiance/ratelimiter
+```
+
+Next, you need to set a few environment variables. For that, you can copy the .env.example and adjust the settings to your needs.  
+
+```go
+package main
+
+import (
+   "github.com/DarkIntaqt/cosmic-radiance/ratelimiter"
+)
+
+func main() {
+   port := 8080
+   limiter := ratelimiter.Init(port)
+
+   limiter.Start()
+
+   // other logic
+   limiter.Stop()
+}
+```
+
+Then, you can start requesting `http://localhost:PORT/<platform>/<method>` or `http://<platform>.api.riotgames.com/<method> (with proxy-pass)`, based on your `MODE` (see configuration). 
+</details>
+
 
 > [!WARNING]
 > If you want to deploy cosmic-radiance to production, please use a [tagged version](https://github.com/DarkIntaqt/cosmic-radiance/releases), since development may take place in the main branch.
