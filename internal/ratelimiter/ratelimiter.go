@@ -17,32 +17,33 @@ import (
 )
 
 type RateLimiter struct {
-	queueManager    *queue.QueueManager
+	queueManager *queue.QueueManager
+
 	incomingChannel chan IncomingRequest
 	updateChannel   chan Update
 	refundChannel   chan Refund
-	started         bool
-	client          *http.Client
-	port            int
-	requests        int64
+	stopSignal      chan os.Signal
 	close           chan struct{}
+
+	started bool
+
+	client   *http.Client
+	port     int
+	requests int64
 }
 
 func NewRateLimiter(port int) *RateLimiter {
 	queueManager := queue.NewQueueManager()
-	incomingChannel := make(chan IncomingRequest)
-	updateChannel := make(chan Update)
-	refundChannel := make(chan Refund)
+
+	stopSignal := make(chan os.Signal, 1)
+	signal.Notify(stopSignal, syscall.SIGINT, syscall.SIGTERM)
 
 	return &RateLimiter{
-		queueManager:    queueManager,
-		incomingChannel: incomingChannel,
-		updateChannel:   updateChannel,
-		refundChannel:   refundChannel,
-		started:         false,
-		close:           make(chan struct{}),
-		port:            port,
-		requests:        1,
+		queueManager: queueManager,
+		stopSignal:   stopSignal,
+		started:      false,
+		close:        make(chan struct{}),
+		port:         port,
 		client: &http.Client{
 			Timeout: 5 * time.Second,
 		},
@@ -60,9 +61,17 @@ func (rl *RateLimiter) Start() {
 		return
 	}
 	rl.started = true
+	rl.requests = 1
+
+	log.Printf("Running Cosmic-Radiance v%s on :%d\n", configs.VERSION, configs.Port)
+
+	// Create all channels,
+	rl.incomingChannel = make(chan IncomingRequest)
+	rl.updateChannel = make(chan Update)
+	rl.refundChannel = make(chan Refund)
 
 	// Add a cancel function
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancelCtx := context.WithCancel(context.Background())
 
 	if configs.PrometheusEnabled {
 		metrics.InitMetrics()
@@ -70,11 +79,8 @@ func (rl *RateLimiter) Start() {
 
 	// Start the main loop in a goroutine
 	go func() {
-
 		log.Println("Starting main loop")
-
 		rl.mainLoop(ctx)
-
 	}()
 
 	// Create the http proxy
@@ -85,27 +91,22 @@ func (rl *RateLimiter) Start() {
 
 	// Serve the http proxy
 	go func() {
-
 		log.Println("Starting proxy")
 
 		if err := proxy.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Proxy crashed: %v\n", err)
 		}
-
 	}()
 
 	// Listen to TERM signals, if so, shut down
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-	<-sigs
+	<-rl.stopSignal
 
 	// Printing an empty line to distinct between before and after the shutdown. Also prevents ^C to be visible in another log message
 	println("")
 	log.Println("Shutting down...")
 
 	// Cancel the context to stop the goroutine
-	cancel()
+	cancelCtx()
 
 	// Create a deadline after which the program would force exit if not shutdown successfully. 30 seconds are very generous
 	stop, cancelDeadline := context.WithDeadline(context.Background(), time.Now().Add(30*time.Second))
@@ -131,6 +132,12 @@ func (rl *RateLimiter) Start() {
 	}
 
 	log.Println("Bye bye from the main thread")
+}
+
+func (rl *RateLimiter) Stop() {
+	if rl.started {
+		rl.stopSignal <- syscall.SIGTERM
+	}
 }
 
 /*
