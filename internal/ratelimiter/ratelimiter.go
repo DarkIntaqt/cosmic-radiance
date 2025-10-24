@@ -27,9 +27,8 @@ type RateLimiter struct {
 
 	started bool
 
-	client   *http.Client
-	port     int
-	requests int64
+	client *http.Client
+	port   int
 }
 
 func NewRateLimiter(port int) *RateLimiter {
