@@ -55,6 +55,8 @@ func (rb *RingBuffer) Process(max int) {
 		req := rb.Dequeue(now)
 
 		if req == nil {
+			// This should not happen, but just in case
+			rb.Refund(keyId, now)
 			break
 		}
 
