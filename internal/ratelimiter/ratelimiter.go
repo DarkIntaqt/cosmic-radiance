@@ -21,9 +21,9 @@ type RateLimiter struct {
 
 	incomingChannel chan IncomingRequest
 	updateChannel   chan Update
-	refundChannel   chan Refund
 	stopSignal      chan os.Signal
 	close           chan struct{}
+	// refundChannel   chan Refund
 
 	started bool
 
@@ -71,7 +71,7 @@ func (rl *RateLimiter) Start() {
 	// Create all channels,
 	rl.incomingChannel = make(chan IncomingRequest)
 	rl.updateChannel = make(chan Update)
-	rl.refundChannel = make(chan Refund)
+	// rl.refundChannel = make(chan Refund)
 
 	// Add a cancel function
 	ctx, cancelCtx := context.WithCancel(context.Background())
@@ -124,7 +124,7 @@ func (rl *RateLimiter) Start() {
 
 	close(rl.incomingChannel)
 	close(rl.updateChannel)
-	close(rl.refundChannel)
+	// close(rl.refundChannel)
 
 	// Waiting for the goroutine to finish or the context to be done
 	// TODO: I don't know if there *could* be a race condition here causing the proxy to stop with ctx.stop and the goroutine not finishing.
@@ -171,8 +171,8 @@ func (rl *RateLimiter) mainLoop(ctx context.Context) {
 				rl.queueManager.AdjustQueueSize()
 			}
 
-		case refund := <-rl.refundChannel:
-			rl.handleRefund(refund)
+		// case refund := <-rl.refundChannel:
+		// 	rl.handleRefund(refund)
 
 		case <-ctx.Done():
 			cleanUpTicker.Stop()

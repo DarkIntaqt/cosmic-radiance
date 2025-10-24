@@ -89,7 +89,7 @@ func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// The request is allowed to be executed
 	case response := <-req.Response:
 		// Record the start time, add a small buffer to avoid hitting the next window on accident
-		startTime := time.Now().Add(time.Millisecond * -5)
+		// startTime := time.Now().Add(time.Millisecond * -5)
 
 		if response.KeyId == request.RequestFailed {
 			if response.RetryAfter != nil {
@@ -112,7 +112,7 @@ func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			if configs.PrometheusEnabled {
 				metrics.UpdateResponseCodes(response.KeyId, syntax.Platform, syntax.Endpoint, 500)
 			}
-			rl.refundRequest(syntax, priority, response.KeyId, startTime)
+			// rl.refundRequest(syntax, priority, response.KeyId, startTime)
 			return
 		}
 
@@ -124,9 +124,10 @@ func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		if riotApiRequest.StatusCode == http.StatusTooManyRequests || (response.Update && riotApiRequest.StatusCode == http.StatusOK) {
 			rl.updateRatelimits(syntax, riotApiRequest, response.KeyId, priority)
-		} else if riotApiRequest.StatusCode >= 500 {
-			rl.refundRequest(syntax, priority, response.KeyId, startTime)
 		}
+		// else if riotApiRequest.StatusCode >= 500 {
+		// 	rl.refundRequest(syntax, priority, response.KeyId, startTime)
+		// }
 
 		// Copy relevant headers from Riot API response to our response
 		importantHeaders := []string{
@@ -149,11 +150,11 @@ func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (rl *RateLimiter) refundRequest(syntax *schema.Syntax, priority request.Priority, keyId int, timestamp time.Time) {
-	rl.refundChannel <- Refund{
-		Syntax:      syntax,
-		Priority:    priority,
-		KeyId:       keyId,
-		RequestTime: timestamp,
-	}
-}
+// func (rl *RateLimiter) refundRequest(syntax *schema.Syntax, priority request.Priority, keyId int, timestamp time.Time) {
+// 	rl.refundChannel <- Refund{
+// 		Syntax:      syntax,
+// 		Priority:    priority,
+// 		KeyId:       keyId,
+// 		RequestTime: timestamp,
+// 	}
+// }

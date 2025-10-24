@@ -14,12 +14,12 @@ type Refund struct {
 	KeyId       int
 }
 
-func (rl *RateLimiter) handleRefund(refund Refund) {
-	if refund.Syntax == nil {
-		return
-	}
-	queue := rl.queueManager.GetQueue(*refund.Syntax, refund.Priority)
-	if queue != nil {
-		queue.Refund(refund.KeyId, refund.RequestTime)
-	}
-}
+// func (rl *RateLimiter) handleRefund(refund Refund) {
+// 	if refund.Syntax == nil {
+// 		return
+// 	}
+// 	queue := rl.queueManager.GetQueue(*refund.Syntax, refund.Priority)
+// 	if queue != nil {
+// 		queue.Refund(refund.KeyId, refund.RequestTime)
+// 	}
+// }
