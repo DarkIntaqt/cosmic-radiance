@@ -23,3 +23,6 @@ const DEFAULT_ADDITIONAL_WINDOW_SIZE = 125 * time.Millisecond
 
 // Maximum utilization of a rate limit in percent.
 const MAX_UTILIZATION_FACTOR = 1
+
+const MAX_BATCH_SIZE_NORMAL = 25
+const MAX_BATCH_SIZE_PRIORITY = MAX_BATCH_SIZE_NORMAL * 5
