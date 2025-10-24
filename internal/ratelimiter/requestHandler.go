@@ -71,17 +71,25 @@ func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	select {
+	// Handle client cancellations
+	// TODO: remove the request from queue
 	case <-r.Context().Done():
 		if configs.PrometheusEnabled {
 			metrics.UpdateResponseCodes(-1, syntax.Platform, syntax.Endpoint, 499)
 		}
+
+	// The request timed out (internally)
 	case <-ctx.Done():
 		// fmt.Println("ctx cancelled")
 		http.Error(w, "Request dropped due to timeout", http.StatusTooManyRequests)
 		if configs.PrometheusEnabled {
 			metrics.UpdateResponseCodes(-1, syntax.Platform, syntax.Endpoint, 408)
 		}
+
+	// The request is allowed to be executed
 	case response := <-req.Response:
+		// Record the start time, add a small buffer to avoid hitting the next window on accident
+		startTime := time.Now().Add(time.Millisecond * -5)
 
 		if response.KeyId == request.RequestFailed {
 			if response.RetryAfter != nil {
@@ -104,7 +112,7 @@ func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			if configs.PrometheusEnabled {
 				metrics.UpdateResponseCodes(response.KeyId, syntax.Platform, syntax.Endpoint, 500)
 			}
-			rl.refundRequest(syntax, priority, response.KeyId)
+			rl.refundRequest(syntax, priority, response.KeyId, startTime)
 			return
 		}
 
@@ -117,7 +125,7 @@ func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if riotApiRequest.StatusCode == http.StatusTooManyRequests || (response.Update && riotApiRequest.StatusCode == http.StatusOK) {
 			rl.updateRatelimits(syntax, riotApiRequest, response.KeyId, priority)
 		} else if riotApiRequest.StatusCode >= 500 {
-			rl.refundRequest(syntax, priority, response.KeyId)
+			rl.refundRequest(syntax, priority, response.KeyId, startTime)
 		}
 
 		// Copy relevant headers from Riot API response to our response
@@ -141,6 +149,11 @@ func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (rl *RateLimiter) refundRequest(syntax *schema.Syntax, priority request.Priority, keyId int) {
-	rl.refundChannel <- Refund{Syntax: syntax, Priority: priority, KeyId: keyId}
+func (rl *RateLimiter) refundRequest(syntax *schema.Syntax, priority request.Priority, keyId int, timestamp time.Time) {
+	rl.refundChannel <- Refund{
+		Syntax:      syntax,
+		Priority:    priority,
+		KeyId:       keyId,
+		RequestTime: timestamp,
+	}
 }
