@@ -18,4 +18,5 @@ const QUEUE_INACTIVITY = time.Minute * 10
 // Polling interval for the main rate limiter loop.
 const DEFAULT_POLLING_INTERVAL = 10 * time.Millisecond
 
+// Additional window size to add to Riot's rate limit windows to circumvent latency
 const DEFAULT_ADDITIONAL_WINDOW_SIZE = 125 * time.Millisecond
