@@ -20,3 +20,6 @@ const DEFAULT_POLLING_INTERVAL = 10 * time.Millisecond
 
 // Additional window size to add to Riot's rate limit windows to circumvent latency
 const DEFAULT_ADDITIONAL_WINDOW_SIZE = 125 * time.Millisecond
+
+// Maximum utilization of a rate limit in percent.
+const MAX_UTILIZATION_FACTOR = 1

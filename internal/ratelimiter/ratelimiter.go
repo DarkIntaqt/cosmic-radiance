@@ -33,6 +33,11 @@ type RateLimiter struct {
 }
 
 func NewRateLimiter(port int) *RateLimiter {
+
+	if configs.MAX_UTILIZATION_FACTOR <= 0 || configs.MAX_UTILIZATION_FACTOR > 1 {
+		panic("Invalid MAX_UTILIZATION_FACTOR")
+	}
+
 	queueManager := queue.NewQueueManager()
 
 	stopSignal := make(chan os.Signal, 1)

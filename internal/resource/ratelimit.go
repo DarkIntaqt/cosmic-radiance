@@ -38,6 +38,7 @@ func (rlc *RateLimitCategory) Update(limit string, count string, retryAfter *tim
 		if err != nil {
 			continue
 		}
+		capacity = int(float64(capacity) * configs.MAX_UTILIZATION_FACTOR)
 
 		window, err := strconv.Atoi(split[1])
 		if err != nil {
