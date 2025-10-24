@@ -17,3 +17,5 @@ const QUEUE_INACTIVITY = time.Minute * 10
 
 // Polling interval for the main rate limiter loop.
 const DEFAULT_POLLING_INTERVAL = 10 * time.Millisecond
+
+const DEFAULT_ADDITIONAL_WINDOW_SIZE = 125 * time.Millisecond

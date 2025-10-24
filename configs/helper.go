@@ -29,26 +29,6 @@ func validateMode(mode string) requestMode {
 	}
 }
 
-func parseTimeout(timeout string) time.Duration {
-	duration, err := time.ParseDuration(timeout + "s")
-	if err != nil {
-		log.Printf("Failed to parse env timeout, falling back to default: %v", err)
-		return DEFAULT_INCOMING_REQUEST_TIMEOUT
-	}
-
-	return duration
-}
-
-func parsePollingInterval(interval string) time.Duration {
-	duration, err := time.ParseDuration(interval + "ms")
-	if err != nil {
-		log.Printf("Failed to parse env polling interval, falling back to default: %v", err)
-		return DEFAULT_POLLING_INTERVAL
-	}
-
-	return duration
-}
-
 func handlePriorityQueueSize() float32 {
 	limit := utils.GetSoftEnvString("PRIORITY_QUEUE_SIZE", "50")
 	value, err := strconv.ParseFloat(limit, 32)
@@ -62,4 +42,19 @@ func handlePriorityQueueSize() float32 {
 
 	// Make it a percentage
 	return float32(value) / 100
+}
+
+func handleDuration(unit string, envName string, defaultDuration time.Duration) time.Duration {
+	limit := utils.GetSoftEnvString(envName, "false")
+	if limit == "false" {
+		return defaultDuration
+	}
+
+	duration, err := time.ParseDuration(limit + unit)
+	if err != nil {
+		log.Printf("Error parsing %s: %v\n", envName, err)
+		return defaultDuration
+	}
+
+	return duration
 }

@@ -1,7 +1,6 @@
 package configs
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -20,7 +19,7 @@ var Port int = utils.GetEnvInt("PORT")
 var RequestMode requestMode = validateMode(utils.GetEnvString("MODE"))
 
 // Timeout for requests
-var Timeout time.Duration = parseTimeout(utils.GetSoftEnvString("TIMEOUT", fmt.Sprintf("%d", int(DEFAULT_INCOMING_REQUEST_TIMEOUT.Seconds()))))
+var Timeout time.Duration = handleDuration("s", "TIMEOUT", DEFAULT_INCOMING_REQUEST_TIMEOUT)
 
 // Size of priority in percent
 var PriorityQueueSize float32 = handlePriorityQueueSize()
@@ -29,4 +28,7 @@ var PriorityQueueSize float32 = handlePriorityQueueSize()
 var PrometheusEnabled bool = strings.ToLower(utils.GetSoftEnvString("PROMETHEUS", "OFF")) == "on"
 
 // Polling interval for the main rate limiter loop.
-var PollingInterval time.Duration = parsePollingInterval(utils.GetSoftEnvString("POLLING_INTERVAL", fmt.Sprintf("%d", int(DEFAULT_POLLING_INTERVAL.Milliseconds()))))
+var PollingInterval time.Duration = handleDuration("ms", "POLLING_INTERVAL", DEFAULT_POLLING_INTERVAL)
+
+// Additional window size to add to Riot's rate limit windows to circumvent latency
+var AdditionalWindowSize time.Duration = handleDuration("ms", "ADDITIONAL_WINDOW_SIZE", DEFAULT_ADDITIONAL_WINDOW_SIZE)
