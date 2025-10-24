@@ -61,7 +61,6 @@ func (rl *RateLimiter) Start() {
 		return
 	}
 	rl.started = true
-	rl.requests = 1
 
 	log.Printf("Running Cosmic-Radiance v%s on :%d\n", configs.VERSION, configs.Port)
 
@@ -147,16 +146,19 @@ Append incoming requests and process the queues
 func (rl *RateLimiter) mainLoop(ctx context.Context) {
 	// Process incoming requests
 
-	ticker := time.NewTicker(30 * time.Second)
+	// Tickers for irrelevant tasks such as clean up processes (free memory)
+	cleanUpTicker := time.NewTicker(30 * time.Second)
+
 	metricsTicker := time.NewTicker(1 * time.Second)
 	if !configs.PrometheusEnabled {
 		metricsTicker.Stop()
 	}
 
+	pollingTicker := time.NewTicker(configs.PollingInterval)
+
 	for {
 		select {
 		case req := <-rl.incomingChannel:
-			rl.requests++ // increase requests, just to be sure
 			rl.handleIncomingRequest(req)
 
 		case update := <-rl.updateChannel:
@@ -169,10 +171,12 @@ func (rl *RateLimiter) mainLoop(ctx context.Context) {
 			rl.handleRefund(refund)
 
 		case <-ctx.Done():
-			ticker.Stop()
+			cleanUpTicker.Stop()
 			if configs.PrometheusEnabled {
 				metricsTicker.Stop()
 			}
+			pollingTicker.Stop()
+
 			// Drain all queues before shutting down
 			rl.queueManager.Drain()
 
@@ -185,28 +189,13 @@ func (rl *RateLimiter) mainLoop(ctx context.Context) {
 		case <-metricsTicker.C:
 			metrics.UpdateQueueSizes(rl.queueManager)
 
-		case <-ticker.C:
-			size := int64(0)
-			for _, queue := range rl.queueManager.PriorityQueues {
-				size += queue.Count()
-			}
-			for _, queue := range rl.queueManager.Queues {
-				size += queue.Count()
-			}
-
-			rl.requests = size
+		case <-cleanUpTicker.C:
 			rl.queueManager.CleanUp()
 
-		default:
-			if rl.requests == 0 {
-				// Slow CPU cycles
-				// Still check everything in case something went wrong
-				time.Sleep(250 * time.Millisecond)
-			}
+		case <-pollingTicker.C:
 			rl.refillRateLimits()
 			rl.processQueues(rl.queueManager.PriorityQueues)
 			rl.processQueues(rl.queueManager.Queues)
-
 		}
 
 	}

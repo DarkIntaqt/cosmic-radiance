@@ -39,6 +39,16 @@ func parseTimeout(timeout string) time.Duration {
 	return duration
 }
 
+func parsePollingInterval(interval string) time.Duration {
+	duration, err := time.ParseDuration(interval + "ms")
+	if err != nil {
+		log.Printf("Failed to parse env polling interval, falling back to default: %v", err)
+		return DEFAULT_POLLING_INTERVAL
+	}
+
+	return duration
+}
+
 func handlePriorityQueueSize() float32 {
 	limit := utils.GetSoftEnvString("PRIORITY_QUEUE_SIZE", "50")
 	value, err := strconv.ParseFloat(limit, 32)

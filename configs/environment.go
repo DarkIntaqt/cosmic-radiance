@@ -27,3 +27,6 @@ var PriorityQueueSize float32 = handlePriorityQueueSize()
 
 // Enable or disable Prometheus metrics
 var PrometheusEnabled bool = strings.ToLower(utils.GetSoftEnvString("PROMETHEUS", "OFF")) == "on"
+
+// Polling interval for the main rate limiter loop.
+var PollingInterval time.Duration = parsePollingInterval(utils.GetSoftEnvString("POLLING_INTERVAL", fmt.Sprintf("%d", int(DEFAULT_POLLING_INTERVAL.Milliseconds()))))

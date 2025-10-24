@@ -10,7 +10,10 @@ const DEFAULT_INCOMING_REQUEST_TIMEOUT = 10 * time.Second
 const RATELIMIT_UPDATE_INTERVAL = time.Minute * 1
 
 // Time to wait between a RATELIMIT_UPDATE_INTERVAL before requesting the next update.
-const UPDATE_GRATUITY = time.Millisecond * 200
+const UPDATE_GRATUITY = time.Millisecond * 250
 
 // Duration after which a inactive queue gets deleted.
 const QUEUE_INACTIVITY = time.Minute * 10
+
+// Polling interval for the main rate limiter loop.
+const DEFAULT_POLLING_INTERVAL = 10 * time.Millisecond
