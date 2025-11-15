@@ -27,20 +27,49 @@ Click on the option that suits you best. For a normal production use-case, Docke
 
 ### Docker
 
-To get started with Docker, clone the project from GitHub.
+To get started with Docker, pull the image from the registry first:
 
 ```
-git clone https://github.com/DarkIntaqt/cosmic-radiance.git
+docker pull ghcr.io/darkintaqt/cosmic-radiance:latest
 ```
 
 Next, you need to set a few environment variables. For that, you can copy the .env.example and adjust the settings to your needs.  
-Finally, run the project in a docker container with: 
+
+#### Running using `docker run`
+
+Finally, run the project through the CLI:
 
 ```
-docker compose up -d
+docker run --env-file ./env ghcr.io/darkintaqt/cosmic-radiance:latest
+```
+
+#### Running using `docker-compose`
+
+Then, add cosmic-radiance to your docker-compose.yml file
+```yml
+services:
+  cosmic-radiance:
+    container_name: cosmic-radiance
+    image: ghcr.io/darkintaqt/cosmic-radiance:latest
+    ports:
+      - "${PORT:-8001}:8001"
+    environment:
+      - API_KEY=${API_KEY:-}
+      - MODE=${MODE:-}
+      - TIMEOUT=${TIMEOUT:-}
+      - PRIORITY_QUEUE_SIZE=${PRIORITY_QUEUE_SIZE:-}
+      - PROMETHEUS=${PROMETHEUS:-}
+# you can add more env variables using this schema
+```
+
+Finally, start the project using
+```
+docker compose up cosmic-radiance
 ```
 
 Then, you can start requesting `http://localhost:PORT/<platform>/<method>` or `http://<platform>.api.riotgames.com/<method> (with proxy-pass)`, based on your `MODE` (see configuration). 
+
+Keep in mind, that other docker container might need to be in the same docker network in order to use cosmic-radiance.
 
 ---
 
