@@ -3,8 +3,6 @@ package ratelimiter
 import (
 	"net/http"
 	"net/url"
-
-	"github.com/DarkIntaqt/cosmic-radiance/configs"
 )
 
 func (rl *RateLimiter) riotApiRequest(region string, method string, queryParams url.Values, keyId int) (*http.Response, error) {
@@ -20,7 +18,7 @@ func (rl *RateLimiter) riotApiRequest(region string, method string, queryParams 
 		return nil, err
 	}
 
-	req.Header.Set("X-Riot-Token", configs.ApiKeys[keyId])
+	req.Header.Set("X-Riot-Token", rl.opts.ApiKeys[keyId])
 	req.Header.Set("Accept-Encoding", "gzip") // accept gzip
 
 	resp, err := rl.client.Do(req)

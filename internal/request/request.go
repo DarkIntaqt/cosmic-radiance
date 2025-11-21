@@ -11,8 +11,9 @@ const (
 )
 
 type Request struct {
-	Expire   int64 // Expiration timestamp in milliseconds
-	Response chan *ResponseChannel
+	Expire      int64 // Expiration timestamp in milliseconds
+	Response    chan *ResponseChannel
+	Invalidated bool
 }
 
 type ResponseChannel struct {
@@ -26,8 +27,9 @@ Creates a new request with expiration time
 */
 func NewRequest(expire time.Duration) *Request {
 	return &Request{
-		Expire:   time.Now().Add(expire).UnixMilli(),
-		Response: make(chan *ResponseChannel, 1), // A buffer of 1 to avoid blocking
+		Expire:      time.Now().Add(expire).UnixMilli(),
+		Response:    make(chan *ResponseChannel, 1), // A buffer of 1 to avoid blocking
+		Invalidated: false,
 	}
 }
 

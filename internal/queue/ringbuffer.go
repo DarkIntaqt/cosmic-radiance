@@ -3,7 +3,6 @@ package queue
 import (
 	"time"
 
-	"github.com/DarkIntaqt/cosmic-radiance/configs"
 	"github.com/DarkIntaqt/cosmic-radiance/internal/request"
 	"github.com/DarkIntaqt/cosmic-radiance/internal/resource"
 )
@@ -27,7 +26,7 @@ type RingBuffer struct {
 	Limits *resource.RateLimitGroupSlice
 }
 
-func newRingBuffer(limits *resource.RateLimitGroupSlice, priority request.Priority) *RingBuffer {
+func newRingBuffer(limits *resource.RateLimitGroupSlice, priority request.Priority, priorityQueueSize float32) *RingBuffer {
 	buffer := &RingBuffer{
 		head:        0,
 		tail:        0,
@@ -40,7 +39,7 @@ func newRingBuffer(limits *resource.RateLimitGroupSlice, priority request.Priori
 	size := buffer.GetPeakCapacity()
 
 	if priority == request.HighPriority {
-		size = int64(float32(buffer.GetPeakCapacity())*configs.PriorityQueueSize) + 1
+		size = int64(float32(buffer.GetPeakCapacity())*priorityQueueSize) + 1
 	}
 
 	buffer.entries = make([]*request.Request, size)

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/DarkIntaqt/cosmic-radiance/configs"
+	"github.com/DarkIntaqt/cosmic-radiance/ratelimiter/options"
 
 	"github.com/DarkIntaqt/cosmic-radiance/internal/metrics"
 	"github.com/DarkIntaqt/cosmic-radiance/internal/queue"
@@ -26,18 +27,23 @@ type RateLimiter struct {
 	// refundChannel   chan Refund
 
 	started bool
+	client  *http.Client
 
-	client *http.Client
-	port   int
+	opts *options.RateLimiterOptions
 }
 
-func NewRateLimiter(port int) *RateLimiter {
+func NewRateLimiter(opts *options.RateLimiterOptions) *RateLimiter {
+
+	clonedOpts := *opts
+	opts = &clonedOpts
+
+	options.ValidateRateLimiterOptions(opts)
 
 	if configs.MAX_UTILIZATION_FACTOR <= 0 || configs.MAX_UTILIZATION_FACTOR > 1 {
 		panic("Invalid MAX_UTILIZATION_FACTOR")
 	}
 
-	queueManager := queue.NewQueueManager()
+	queueManager := queue.NewQueueManager(opts)
 
 	stopSignal := make(chan os.Signal, 1)
 	signal.Notify(stopSignal, syscall.SIGINT, syscall.SIGTERM)
@@ -47,7 +53,7 @@ func NewRateLimiter(port int) *RateLimiter {
 		stopSignal:   stopSignal,
 		started:      false,
 		close:        make(chan struct{}),
-		port:         port,
+		opts:         opts,
 		client: &http.Client{
 			Timeout: 5 * time.Second,
 		},
@@ -66,7 +72,7 @@ func (rl *RateLimiter) Start() {
 	}
 	rl.started = true
 
-	log.Printf("Running Cosmic-Radiance v%s on :%d\n", configs.VERSION, configs.Port)
+	log.Printf("Running Cosmic-Radiance v%s on :%d\n", configs.VERSION, rl.opts.Port)
 
 	// Create all channels,
 	rl.incomingChannel = make(chan IncomingRequest)
@@ -76,7 +82,7 @@ func (rl *RateLimiter) Start() {
 	// Add a cancel function
 	ctx, cancelCtx := context.WithCancel(context.Background())
 
-	if configs.PrometheusEnabled {
+	if rl.opts.PrometheusEnabled {
 		metrics.InitMetrics()
 	}
 
@@ -88,7 +94,7 @@ func (rl *RateLimiter) Start() {
 
 	// Create the http proxy
 	proxy := &http.Server{
-		Addr:    fmt.Sprintf(":%d", rl.port),
+		Addr:    fmt.Sprintf(":%d", rl.opts.Port),
 		Handler: rl,
 	}
 
@@ -154,12 +160,11 @@ func (rl *RateLimiter) mainLoop(ctx context.Context) {
 	cleanUpTicker := time.NewTicker(30 * time.Second)
 
 	metricsTicker := time.NewTicker(1 * time.Second)
-	if !configs.PrometheusEnabled {
+	if !rl.opts.PrometheusEnabled {
 		metricsTicker.Stop()
 	}
 
-	pollingTicker := time.NewTicker(configs.PollingInterval)
-
+	pollingTicker := time.NewTicker(rl.opts.PollingInterval)
 	for {
 		select {
 		case req := <-rl.incomingChannel:
@@ -176,7 +181,7 @@ func (rl *RateLimiter) mainLoop(ctx context.Context) {
 
 		case <-ctx.Done():
 			cleanUpTicker.Stop()
-			if configs.PrometheusEnabled {
+			if rl.opts.PrometheusEnabled {
 				metricsTicker.Stop()
 			}
 			pollingTicker.Stop()

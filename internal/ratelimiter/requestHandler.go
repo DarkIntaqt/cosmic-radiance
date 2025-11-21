@@ -8,10 +8,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/DarkIntaqt/cosmic-radiance/configs"
 	"github.com/DarkIntaqt/cosmic-radiance/internal/metrics"
 	"github.com/DarkIntaqt/cosmic-radiance/internal/request"
 	"github.com/DarkIntaqt/cosmic-radiance/internal/schema"
+	"github.com/DarkIntaqt/cosmic-radiance/ratelimiter/options"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -20,8 +20,9 @@ func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	path := r.URL.Path
 
+	prometheusEnabled := rl.opts.PrometheusEnabled
 	// Serve prometheus metrics
-	if configs.PrometheusEnabled && path == "/metrics" {
+	if prometheusEnabled && path == "/metrics" {
 		promhttp.Handler().ServeHTTP(w, r)
 		return
 	}
@@ -29,7 +30,7 @@ func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var syntax *schema.Syntax
 
 	// Determine the endpoints by using the proxy mode
-	if configs.RequestMode == configs.ProxyMode {
+	if rl.opts.RequestMode == options.ProxyMode {
 		schema, err := schema.NewProxySyntax(r.URL.Host, path)
 		if err != nil {
 			w.Header().Set("Retry-After", "60")
@@ -53,8 +54,9 @@ func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		priority = request.HighPriority
 	}
 
+	timeout := rl.opts.Timeout
 	// Create a new request
-	req := request.NewRequest(configs.Timeout)
+	req := request.NewRequest(timeout)
 
 	// Don't leave dangling channels open
 	// defer close(req.Response)
@@ -67,14 +69,14 @@ func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// add one second on top to not drop requests which should've been successful
-	ctx, cancel := context.WithTimeout(context.Background(), configs.Timeout+5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout+5*time.Second)
 	defer cancel()
 
 	select {
 	// Handle client cancellations
 	// TODO: remove the request from queue
 	case <-r.Context().Done():
-		if configs.PrometheusEnabled {
+		if prometheusEnabled {
 			metrics.UpdateResponseCodes(-1, syntax.Platform, syntax.Endpoint, 499)
 		}
 
@@ -82,7 +84,7 @@ func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case <-ctx.Done():
 		// fmt.Println("ctx cancelled")
 		http.Error(w, "Request dropped due to timeout", http.StatusTooManyRequests)
-		if configs.PrometheusEnabled {
+		if prometheusEnabled {
 			metrics.UpdateResponseCodes(-1, syntax.Platform, syntax.Endpoint, 408)
 		}
 
@@ -97,7 +99,7 @@ func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 			// fmt.Println("timeout exceeded")
 			http.Error(w, "Rate limit exceeded", http.StatusTooManyRequests)
-			if configs.PrometheusEnabled {
+			if prometheusEnabled {
 				metrics.UpdateResponseCodes(response.KeyId, syntax.Platform, syntax.Endpoint, 430)
 			}
 			return
@@ -109,7 +111,7 @@ func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Retry-After", "0")
 			http.Error(w, "Failed to make API request", http.StatusInternalServerError)
 
-			if configs.PrometheusEnabled {
+			if prometheusEnabled {
 				metrics.UpdateResponseCodes(response.KeyId, syntax.Platform, syntax.Endpoint, 500)
 			}
 			// rl.refundRequest(syntax, priority, response.KeyId, startTime)
@@ -117,7 +119,7 @@ func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Report prometheus statistics, if enabled
-		if configs.PrometheusEnabled {
+		if prometheusEnabled {
 			metrics.UpdateResponseCodes(response.KeyId, syntax.Platform, syntax.Endpoint, riotApiRequest.StatusCode)
 		}
 		defer riotApiRequest.Body.Close()

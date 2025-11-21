@@ -62,7 +62,7 @@ func (rlc *RateLimitCategory) Update(limit string, count string, retryAfter *tim
 
 			lastRefill := rlc.RateLimits[i].LastRefill
 			currentReqs := rlc.RateLimits[i].Current
-			duration := getDurationFromWindow(window)
+			duration := getDurationFromWindow(window, *rlc.AdditionalWindowSize)
 
 			// We puddle along the original limit
 			// If the limit Riot gave us is higher than ours (which shouldnt be happening), update ours accordingly
@@ -84,7 +84,7 @@ func (rlc *RateLimitCategory) Update(limit string, count string, retryAfter *tim
 			}
 		} else {
 
-			duration := getDurationFromWindow(window)
+			duration := getDurationFromWindow(window, *rlc.AdditionalWindowSize)
 			lastRefill := now
 			currentReqs := current
 
@@ -103,7 +103,7 @@ func (rlc *RateLimitCategory) Update(limit string, count string, retryAfter *tim
 
 		ratelimit := rlc.RateLimits[i]
 
-		currentPeakCapacity := float64(ratelimit.Limit) / float64(ratelimit.Window) * float64(configs.Timeout)
+		currentPeakCapacity := float64(ratelimit.Limit) / float64(ratelimit.Window) * float64(*rlc.Timeout)
 
 		if peakCapacity == 0 {
 			peakCapacity = currentPeakCapacity
@@ -131,6 +131,6 @@ func (rlc *RateLimitCategory) Update(limit string, count string, retryAfter *tim
 
 }
 
-func getDurationFromWindow(window int) time.Duration {
-	return time.Duration(window)*time.Second + configs.AdditionalWindowSize
+func getDurationFromWindow(window int, additionalWindowSize time.Duration) time.Duration {
+	return time.Duration(window)*time.Second + additionalWindowSize
 }

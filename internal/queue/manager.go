@@ -8,6 +8,7 @@ import (
 	"github.com/DarkIntaqt/cosmic-radiance/internal/request"
 	"github.com/DarkIntaqt/cosmic-radiance/internal/resource"
 	"github.com/DarkIntaqt/cosmic-radiance/internal/schema"
+	"github.com/DarkIntaqt/cosmic-radiance/ratelimiter/options"
 )
 
 type QueueManager struct {
@@ -15,19 +16,21 @@ type QueueManager struct {
 	PriorityQueues      map[string]*RingBuffer
 	RateLimitGroups     map[string]*resource.RateLimitGroupSlice // per ID, holds several api keys
 	RateLimitCategories []map[string]*resource.RateLimitCategory // for each api key, holds either platform or ID
+	opts                *options.RateLimiterOptions
 }
 
-func NewQueueManager() *QueueManager {
+func NewQueueManager(opts *options.RateLimiterOptions) *QueueManager {
 
 	manager := &QueueManager{
 		Queues:              make(map[string]*RingBuffer),
 		PriorityQueues:      make(map[string]*RingBuffer),
 		RateLimitGroups:     make(map[string]*resource.RateLimitGroupSlice),
-		RateLimitCategories: make([]map[string]*resource.RateLimitCategory, len(configs.ApiKeys)),
+		RateLimitCategories: make([]map[string]*resource.RateLimitCategory, len(opts.ApiKeys)),
+		opts:                opts,
 	}
 
 	// Init the maps
-	for i := 0; i < len(configs.ApiKeys); i++ {
+	for i := 0; i < len(opts.ApiKeys); i++ {
 		manager.RateLimitCategories[i] = make(map[string]*resource.RateLimitCategory)
 	}
 
@@ -53,11 +56,11 @@ func (qm *QueueManager) EnqueueRequest(req *request.Request, priority request.Pr
 
 			// Create the rate limit group and categories and fill it with placeholder limits
 			// A group will only exists if a category also already exists
-			rateLimitGroupSlice := make(resource.RateLimitGroupSlice, len(configs.ApiKeys))
+			rateLimitGroupSlice := make(resource.RateLimitGroupSlice, len(qm.opts.ApiKeys))
 			qm.RateLimitGroups[syntax.Id] = &rateLimitGroupSlice
 			created := 0
 
-			for i := 0; i < len(configs.ApiKeys); i++ {
+			for i := 0; i < len(qm.opts.ApiKeys); i++ {
 				if _, Ok := qm.RateLimitCategories[i][syntax.Id]; !Ok {
 					created++
 					qm.RateLimitCategories[i][syntax.Id] = &resource.RateLimitCategory{
@@ -68,6 +71,8 @@ func (qm *QueueManager) EnqueueRequest(req *request.Request, priority request.Pr
 							Current:    0,
 							LastRefill: now,
 						}},
+						AdditionalWindowSize: &qm.opts.AdditionalWindowSize,
+						Timeout:              &qm.opts.Timeout,
 					}
 				}
 
@@ -82,6 +87,8 @@ func (qm *QueueManager) EnqueueRequest(req *request.Request, priority request.Pr
 							Current:    0,
 							LastRefill: now,
 						}},
+						AdditionalWindowSize: &qm.opts.AdditionalWindowSize,
+						Timeout:              &qm.opts.Timeout,
 					})
 				}
 
@@ -95,13 +102,13 @@ func (qm *QueueManager) EnqueueRequest(req *request.Request, priority request.Pr
 					PlatformLimits: platformLimits,
 					MethodLimits:   methodLimits,
 					// Set peak capacity to something that smaller...
-					PeakCapacity: int64(50 * configs.Timeout.Seconds() / float64(i+1)),
+					PeakCapacity: int64(50 * qm.opts.Timeout.Seconds() / float64(i+1)),
 				}
 			}
 		}
 
 		groups := qm.RateLimitGroups[syntax.Id]
-		queue[syntax.Id] = newRingBuffer(groups, priority)
+		queue[syntax.Id] = newRingBuffer(groups, priority, qm.opts.PriorityQueueSize)
 		if priority == request.HighPriority {
 			log.Printf("Queue #P-%s created for %s/%s with size of %d\n", syntax.Id, syntax.Platform, syntax.Endpoint, queue[syntax.Id].size)
 		} else {
@@ -141,7 +148,7 @@ func (qm *QueueManager) AdjustQueueSize() {
 	for key, queue := range qm.getQueues(request.NormalPriority) {
 		peakCapacity := queue.GetPeakCapacity()
 		if peakCapacity != queue.size && queue.Count() < peakCapacity {
-			newQueue := newRingBuffer(queue.Limits, queue.Priority)
+			newQueue := newRingBuffer(queue.Limits, queue.Priority, qm.opts.PriorityQueueSize)
 
 			// put all entries from the old queue in the new queue
 			for queue.Count() > 0 {
@@ -156,9 +163,9 @@ func (qm *QueueManager) AdjustQueueSize() {
 
 	for key, queue := range qm.getQueues(request.HighPriority) {
 		// Priority queues only get a fraction an original queues size to prevent overflows and priority spamming
-		peakCapacity := int64(float32(queue.GetPeakCapacity())*configs.PriorityQueueSize) + 1
+		peakCapacity := int64(float32(queue.GetPeakCapacity())*qm.opts.PriorityQueueSize) + 1
 		if peakCapacity != queue.size && queue.Count() < peakCapacity {
-			newQueue := newRingBuffer(queue.Limits, queue.Priority)
+			newQueue := newRingBuffer(queue.Limits, queue.Priority, qm.opts.PriorityQueueSize)
 
 			// put all entries from the old queue in the new queue
 			for queue.Count() > 0 {

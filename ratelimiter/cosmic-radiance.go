@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/DarkIntaqt/cosmic-radiance/internal/ratelimiter"
+	"github.com/DarkIntaqt/cosmic-radiance/ratelimiter/options"
 )
 
 type cosmicRadiance struct {
@@ -14,8 +15,8 @@ type cosmicRadiance struct {
 }
 
 // Initializes a new instance of cosmic-radiance
-func Init(port int) *cosmicRadiance {
-	instance := ratelimiter.NewRateLimiter(port)
+func Init(opts options.RateLimiterOptions) *cosmicRadiance {
+	instance := ratelimiter.NewRateLimiter(&opts)
 
 	return &cosmicRadiance{
 		instance: instance,
