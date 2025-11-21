@@ -19,7 +19,6 @@ type RateLimiterOptions struct {
 	Timeout              time.Duration
 	PriorityQueueSize    float32
 	PrometheusEnabled    bool
-	WebserverEnabled     bool
 	PollingInterval      time.Duration
 	AdditionalWindowSize time.Duration
 }

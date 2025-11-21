@@ -18,7 +18,6 @@ func main() {
 		Port:              utils.GetEnvInt("PORT"),
 		RequestMode:       utils.ValidateRequestMode(),
 		Timeout:           utils.HandleDuration("s", "TIMEOUT", configs.DEFAULT_INCOMING_REQUEST_TIMEOUT),
-		WebserverEnabled:  true,
 		PriorityQueueSize: utils.HandlePriorityQueueSize(),
 		PrometheusEnabled: strings.ToLower(utils.GetSoftEnvString("PROMETHEUS", "OFF")) == "on",
 		PollingInterval:   utils.HandleDuration("ms", "POLLING_INTERVAL", configs.DEFAULT_POLLING_INTERVAL),
