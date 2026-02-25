@@ -26,7 +26,7 @@ type RateLimiterOptions struct {
 func ValidateRateLimiterOptions(opts *RateLimiterOptions) {
 
 	if len(opts.ApiKeys) == 0 {
-		panic("Prove an API key")
+		panic("Provide an API key")
 	}
 
 	if opts.Port <= 0 || opts.Port > 65535 {
