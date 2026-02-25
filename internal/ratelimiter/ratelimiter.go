@@ -55,7 +55,7 @@ func NewRateLimiter(opts *options.RateLimiterOptions) *RateLimiter {
 		close:        make(chan struct{}),
 		opts:         opts,
 		client: &http.Client{
-			Timeout: 5 * time.Second,
+			Timeout: opts.Timeout,
 		},
 	}
 }
