@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/DarkIntaqt/cosmic-radiance/internal/metrics"
@@ -55,8 +56,21 @@ func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	timeout := rl.opts.Timeout
+
+	var tokenIndex *int
+	tokenIndexHeader := r.Header.Get("X-Riot-Token-Index")
+	if tokenIndexHeader != "" {
+		if idx, err := strconv.Atoi(tokenIndexHeader); err == nil && idx >= 0 && idx < len(rl.opts.ApiKeys) {
+			tokenIndex = &idx
+		} else {
+			w.Header().Set("Retry-After", "0")
+			http.Error(w, "Invalid X-Riot-Token-Index", http.StatusBadRequest)
+			return
+		}
+	}
+
 	// Create a new request
-	req := request.NewRequest(timeout)
+	req := request.NewRequest(timeout, tokenIndex)
 
 	// Don't leave dangling channels open
 	// defer close(req.Response)

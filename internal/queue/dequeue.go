@@ -46,17 +46,9 @@ func (rb *RingBuffer) Process(max int) {
 
 	for i := 0; i < max && rb.count > 0; i++ {
 
-		keyId := rb.canDequeue(now)
-
-		if keyId < 0 {
-			break
-		}
-
-		req := rb.Dequeue(now)
+		req, keyId := rb.dequeueDispatchable(now)
 
 		if req == nil {
-			// This should not happen, but just in case
-			rb.Refund(keyId, now)
 			break
 		}
 
@@ -68,18 +60,81 @@ func (rb *RingBuffer) Process(max int) {
 	}
 }
 
-func (rb *RingBuffer) canDequeue(now time.Time) int {
+// dequeueDispatchable scans the queue for the first request that can be processed with an available API key
+// It removes the request from the array, shifts preceding elements, and returns the request and the assigned KeyId.
+func (rb *RingBuffer) dequeueDispatchable(now time.Time) (*request.Request, int) {
+	if rb.count == 0 {
+		return nil, -1
+	}
+
 	limits := rb.Limits
 
-	// Cycle through the key and check for one that allows the request
-	for i := 0; i < len(*limits); i++ {
-		if (*limits)[i].TryAllow(now, rb.Priority) {
-			return i
+	anyAvailable := false
+	for k := 0; k < len(*limits); k++ {
+		if (*limits)[k].CanAllow(now, rb.Priority) {
+			anyAvailable = true
+			break
+		}
+	}
+	if !anyAvailable {
+		return nil, -1
+	}
+
+	for i := int64(0); i < rb.count; i++ {
+		idx := (rb.head + i) % rb.size
+		req := rb.entries[idx]
+
+		if req == nil {
+			continue
+		}
+
+		// Skip expired requests
+		if now.UnixMilli() >= req.Expire {
+			continue
+		}
+
+		availableKeyId := -1
+
+		if req.TokenIndex != nil {
+			// Specific token requested
+			if *req.TokenIndex < len(*limits) && (*limits)[*req.TokenIndex].TryAllow(now, rb.Priority) {
+				availableKeyId = *req.TokenIndex
+			}
+		} else {
+			// Any token
+			for k := 0; k < len(*limits); k++ {
+				if (*limits)[k].TryAllow(now, rb.Priority) {
+					availableKeyId = k
+					break
+				}
+			}
+		}
+
+		if availableKeyId >= 0 {
+			// We can dispatch this request.
+			// Shift all elements before this one forward by 1 to fill the hole.
+			if i > 0 {
+				for j := i; j > 0; j-- {
+					currIdx := (rb.head + j) % rb.size
+					prevIdx := (rb.head + j - 1 + rb.size) % rb.size
+					rb.entries[currIdx] = rb.entries[prevIdx]
+				}
+			}
+
+			// Empty spot is now at the head, dequeue it normally
+			rb.entries[rb.head] = nil
+			rb.head = (rb.head + 1) % rb.size
+			rb.count--
+
+			if rb.count == 0 {
+				rb.lastUpdated = time.Now()
+			}
+
+			return req, availableKeyId
 		}
 	}
 
-	return -1
-
+	return nil, -1
 }
 
 func (rb *RingBuffer) needsUpdate(keyId int, now time.Time) bool {
