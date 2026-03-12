@@ -12,6 +12,7 @@ const (
 
 type Request struct {
 	Expire      int64 // Expiration timestamp in milliseconds
+	TokenIndex  *int
 	Response    chan *ResponseChannel
 	Invalidated bool
 }
@@ -25,9 +26,10 @@ type ResponseChannel struct {
 /*
 Creates a new request with expiration time
 */
-func NewRequest(expire time.Duration) *Request {
+func NewRequest(expire time.Duration, tokenIndex *int) *Request {
 	return &Request{
 		Expire:      time.Now().Add(expire).UnixMilli(),
+		TokenIndex:  tokenIndex,
 		Response:    make(chan *ResponseChannel, 1), // A buffer of 1 to avoid blocking
 		Invalidated: false,
 	}
