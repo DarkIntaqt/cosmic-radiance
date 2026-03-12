@@ -34,6 +34,58 @@ func (rlg *RateLimitGroup) NeedsUpdate(now time.Time) bool {
 }
 
 /*
+Checks if a request can be allowed through the rate limit without consuming quota.
+*/
+func (rlg *RateLimitGroup) CanAllow(now time.Time, priority request.Priority) bool {
+	if rlg.PlatformLimits.LockedUntil.After(now) || rlg.MethodLimits.LockedUntil.After(now) {
+		return false
+	}
+
+	// Loop through all available limits
+	for i := range rlg.PlatformLimits.RateLimits {
+		rl := rlg.PlatformLimits.RateLimits[i]
+
+		if rl.Current >= rl.Limit {
+			return false
+		}
+
+		if priority == request.HighPriority {
+			continue
+		}
+
+		// Compute how many requests should have been allowed by now ideally
+		elapsed := now.Sub(rl.LastRefill)
+		idealAllowed := int(math.Min(float64(elapsed)/float64(rl.Window)*float64(rl.Limit)+1, float64(rl.Limit)))
+
+		if rl.Current > idealAllowed {
+			return false
+		}
+	}
+
+	for i := range rlg.MethodLimits.RateLimits {
+		rl := rlg.MethodLimits.RateLimits[i]
+
+		if rl.Current >= rl.Limit {
+			return false
+		}
+
+		if priority == request.HighPriority {
+			continue
+		}
+
+		// Compute how many requests should have been allowed by now ideally
+		elapsed := now.Sub(rl.LastRefill)
+		idealAllowed := int(math.Min(float64(elapsed)/float64(rl.Window)*float64(rl.Limit)+1, float64(rl.Limit)))
+
+		if rl.Current > idealAllowed {
+			return false
+		}
+	}
+
+	return true
+}
+
+/*
 Tries to allow a request through the rate limit.
 If the request is allowed, it consumes the available quota.
 */

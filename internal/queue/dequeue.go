@@ -69,6 +69,17 @@ func (rb *RingBuffer) dequeueDispatchable(now time.Time) (*request.Request, int)
 
 	limits := rb.Limits
 
+	anyAvailable := false
+	for k := 0; k < len(*limits); k++ {
+		if (*limits)[k].CanAllow(now, rb.Priority) {
+			anyAvailable = true
+			break
+		}
+	}
+	if !anyAvailable {
+		return nil, -1
+	}
+
 	for i := int64(0); i < rb.count; i++ {
 		idx := (rb.head + i) % rb.size
 		req := rb.entries[idx]
