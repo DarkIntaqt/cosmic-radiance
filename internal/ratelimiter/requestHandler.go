@@ -60,7 +60,7 @@ func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var tokenIndex *int
 	tokenIndexHeader := r.Header.Get("X-Riot-Token-Index")
 	if tokenIndexHeader != "" {
-		if idx, err := strconv.Atoi(tokenIndexHeader); err == nil && idx >= 0 {
+		if idx, err := strconv.Atoi(tokenIndexHeader); err == nil && idx >= 0 && idx < len(rl.opts.ApiKeys) {
 			tokenIndex = &idx
 		} else {
 			w.Header().Set("Retry-After", "0")
