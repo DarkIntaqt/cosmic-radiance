@@ -74,8 +74,8 @@ func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	select {
 	// Handle client cancellations
-	// TODO: remove the request from queue
 	case <-r.Context().Done():
+		req.Invalidate()
 		if prometheusEnabled {
 			metrics.UpdateResponseCodes(-1, syntax.Platform, syntax.Endpoint, 499)
 		}

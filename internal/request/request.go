@@ -22,20 +22,20 @@ type ResponseChannel struct {
 	RetryAfter *time.Time // Optional
 }
 
-/*
-Creates a new request with expiration time
-*/
+// NewRequest creates a new request with an expiration time
 func NewRequest(expire time.Duration) *Request {
 	return &Request{
 		Expire:      time.Now().Add(expire).UnixMilli(),
-		Response:    make(chan *ResponseChannel, 1), // A buffer of 1 to avoid blocking
+		Response:    make(chan *ResponseChannel, 1), // A buffer size of 1 to avoid blocking
 		Invalidated: false,
 	}
 }
 
-/*
-Sends a failed response to the request's response channel.
-*/
+func (r *Request) Invalidate() {
+	r.Invalidated = true
+}
+
+// FailedResponse sends a failed response to the requests response channel.
 func (r *Request) FailedResponse(time *time.Time) {
 	r.Response <- &ResponseChannel{
 		KeyId:      RequestFailed,

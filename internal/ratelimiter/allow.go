@@ -7,7 +7,6 @@ import (
 )
 
 func (rm *RateLimiter) processQueues(queues map[string]*queue.RingBuffer) {
-
 	batchSize := configs.MAX_BATCH_SIZE_NORMAL
 
 	for _, queue := range queues {
@@ -16,5 +15,4 @@ func (rm *RateLimiter) processQueues(queues map[string]*queue.RingBuffer) {
 		}
 		queue.Process(batchSize)
 	}
-
 }

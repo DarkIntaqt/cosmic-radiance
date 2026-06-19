@@ -140,7 +140,7 @@ func (rl *RateLimiter) Start() {
 		log.Println("The goroutine didn't stop in time, we forcefully shutting it down now")
 	}
 
-	log.Println("Bye bye from the main thread")
+	log.Println("Successfully shut down")
 }
 
 func (rl *RateLimiter) Stop() {

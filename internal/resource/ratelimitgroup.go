@@ -19,9 +19,7 @@ type RateLimitGroup struct {
 	// TotalRequests  int64 // counter of total requests for analytics
 }
 
-/*
-Returns whether the rate limit on that key needs to be refreshed
-*/
+// NeedsUpdate returns whether a rate limit group needs to update its limits
 func (rlg *RateLimitGroup) NeedsUpdate(now time.Time) bool {
 	// Update limits every five minutes
 	needsUpdate := rlg.LastUpdated.Before(now.Add(-configs.RATELIMIT_UPDATE_INTERVAL))
@@ -106,10 +104,7 @@ func (rlg *RateLimitGroup) TryAllow(now time.Time, priority request.Priority) bo
 	return true
 }
 
-/*
-Refunds a request.
-Inverse of TryAllow.
-*/
+// Refund is the inverse function of TryAllow and decreases the currently used rate limit by one
 func (rlg *RateLimitGroup) Refund(now time.Time) {
 	// Decrease all limits by one only if still within the same window
 	for i := range rlg.PlatformLimits.RateLimits {

@@ -8,10 +8,7 @@ import (
 
 // NOT TO BE CONFUSED WITH DRAIN!
 
-/*
-INTERNAL:
-purge removes all outdated entries by peeking into them, then return amount of purged entries
-*/
+// purge removes all outdated entries by peeking into them, then return amount of purged entries
 func (rb *RingBuffer) purge(nowTime time.Time) int {
 	now := nowTime.UnixMilli()
 	count := 0
@@ -31,10 +28,7 @@ func (rb *RingBuffer) purge(nowTime time.Time) int {
 	}
 }
 
-/*
-INTERNAL:
-purgeAndPeek removes all outdated entries and returns the next valid request.
-*/
+// purgeAndPeek removes all outdated entries and returns the next valid request.
 func (rb *RingBuffer) purgeAndPeek(nowTime time.Time) *request.Request {
 	now := nowTime.UnixMilli()
 
@@ -50,13 +44,9 @@ func (rb *RingBuffer) purgeAndPeek(nowTime time.Time) *request.Request {
 
 		rb.dequeue()
 	}
-
 }
 
-/*
-INTERNAL:
-purgeAndDequeue removes all outdated entries and dequeues the next valid request.
-*/
+// purgeAndDequeue removes all outdated entries and dequeues the next valid request.
 func (rb *RingBuffer) purgeAndDequeue(nowTime time.Time) *request.Request {
 	now := nowTime.UnixMilli()
 
@@ -64,6 +54,9 @@ func (rb *RingBuffer) purgeAndDequeue(nowTime time.Time) *request.Request {
 		req := rb.dequeue()
 		if req == nil {
 			return nil
+		}
+		if req.Invalidated {
+			continue
 		}
 
 		if now < req.Expire {

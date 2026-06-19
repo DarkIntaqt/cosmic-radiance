@@ -20,7 +20,6 @@ type QueueManager struct {
 }
 
 func NewQueueManager(opts *options.RateLimiterOptions) *QueueManager {
-
 	manager := &QueueManager{
 		Queues:              make(map[string]*RingBuffer),
 		PriorityQueues:      make(map[string]*RingBuffer),
@@ -48,10 +47,8 @@ func (qm *QueueManager) EnqueueRequest(req *request.Request, priority request.Pr
 
 	// Check if the queue already exists
 	if _, exists := queue[syntax.Id]; !exists {
-
 		// Create if the rate limit group doesn't already exists
 		if groups, exists := qm.RateLimitGroups[syntax.Id]; !exists || len(*groups) == 0 {
-
 			now := time.Now()
 
 			// Create the rate limit group and categories and fill it with placeholder limits
@@ -66,7 +63,7 @@ func (qm *QueueManager) EnqueueRequest(req *request.Request, priority request.Pr
 					qm.RateLimitCategories[i][syntax.Id] = &resource.RateLimitCategory{
 						LockedUntil: now,
 						RateLimits: []*resource.RateLimit{{
-							Window:     time.Duration(5 * time.Second),
+							Window:     5 * time.Second,
 							Limit:      5,
 							Current:    0,
 							LastRefill: now,
@@ -79,17 +76,17 @@ func (qm *QueueManager) EnqueueRequest(req *request.Request, priority request.Pr
 				// Check if there are no limits for the platform already
 				if _, Ok := qm.RateLimitCategories[i][syntax.Platform]; !Ok {
 					created++
-					qm.RateLimitCategories[i][syntax.Platform] = (&resource.RateLimitCategory{
+					qm.RateLimitCategories[i][syntax.Platform] = &resource.RateLimitCategory{
 						LockedUntil: now,
 						RateLimits: []*resource.RateLimit{{
-							Window:     time.Duration(5 * time.Second),
+							Window:     5 * time.Second,
 							Limit:      5,
 							Current:    0,
 							LastRefill: now,
 						}},
 						AdditionalWindowSize: &qm.opts.AdditionalWindowSize,
 						Timeout:              &qm.opts.Timeout,
-					})
+					}
 				}
 
 				platformLimits := qm.RateLimitCategories[i][syntax.Platform]

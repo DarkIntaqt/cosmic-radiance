@@ -45,7 +45,6 @@ func (rb *RingBuffer) Process(max int) {
 	rb.purge(now)
 
 	for i := 0; i < max && rb.count > 0; i++ {
-
 		keyId := rb.canDequeue(now)
 
 		if keyId < 0 {
@@ -69,11 +68,11 @@ func (rb *RingBuffer) Process(max int) {
 }
 
 func (rb *RingBuffer) canDequeue(now time.Time) int {
-	limits := rb.Limits
+	limits := *rb.Limits
 
 	// Cycle through the key and check for one that allows the request
-	for i := 0; i < len(*limits); i++ {
-		if (*limits)[i].TryAllow(now, rb.Priority) {
+	for i := 0; i < len(limits); i++ {
+		if limits[i].TryAllow(now, rb.Priority) {
 			return i
 		}
 	}

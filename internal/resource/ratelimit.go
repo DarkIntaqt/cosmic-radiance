@@ -83,7 +83,6 @@ func (rlc *RateLimitCategory) Update(limit string, count string, retryAfter *tim
 				LastRefill: lastRefill,
 			}
 		} else {
-
 			duration := getDurationFromWindow(window, *rlc.AdditionalWindowSize)
 			lastRefill := now
 			currentReqs := current
