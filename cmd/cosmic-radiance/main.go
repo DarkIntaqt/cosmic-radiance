@@ -12,7 +12,6 @@ import (
 
 // Automatically starts cosmic-radiance
 func main() {
-
 	limiter := ratelimiter.NewRateLimiter(&options.RateLimiterOptions{
 		ApiKeys:           strings.Split(utils.GetEnvString("API_KEY"), ","),
 		Port:              utils.GetEnvInt("PORT"),
@@ -23,7 +22,8 @@ func main() {
 		PollingInterval:   utils.HandleDuration("ms", "POLLING_INTERVAL", configs.DEFAULT_POLLING_INTERVAL),
 		AdditionalWindowSize: utils.HandleDuration("ms", "ADDITIONAL_WINDOW_SIZE",
 			configs.DEFAULT_ADDITIONAL_WINDOW_SIZE),
+		UserAgent: utils.GetSoftEnvString("USER_AGENT", configs.DEFAULT_USER_AGENT),
 	})
-	limiter.Start()
 
+	limiter.Start()
 }

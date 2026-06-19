@@ -6,7 +6,6 @@ import (
 )
 
 func (rl *RateLimiter) riotApiRequest(region string, method string, queryParams url.Values, keyId int) (*http.Response, error) {
-
 	// prepare the request
 	// append the api key as a header
 
@@ -18,6 +17,7 @@ func (rl *RateLimiter) riotApiRequest(region string, method string, queryParams 
 		return nil, err
 	}
 
+	req.Header.Set("User-Agent", rl.opts.UserAgent)
 	req.Header.Set("X-Riot-Token", rl.opts.ApiKeys[keyId])
 	req.Header.Set("Accept-Encoding", "gzip") // accept gzip
 
@@ -27,5 +27,4 @@ func (rl *RateLimiter) riotApiRequest(region string, method string, queryParams 
 	}
 
 	return resp, nil
-
 }

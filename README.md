@@ -151,7 +151,7 @@ Then, you can start requesting `http://localhost:PORT/<platform>/<method>` or `h
 There are several .env variables which can fine tune cosmic-radiance. Some are required
 
 | Name                   | Function                                                                                                                                                                                                                                                                             |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| ---------------------- |--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | API_KEY **required**   | Your Riot Games API key. Cosmic-radiance needs your key to fire requests to the Riot Games API.                                                                                                                                                                                      |
 | PORT **required**      | Port on which the proxy is running. Chose a port that is free. Please double-check your port and Dockerfile configuration.                                                                                                                                                           |
 | MODE **required**      | Either `PATH` or `PROXY`. In path mode, you request cosmic-radiance like a normal webserver with the endpoint following the endpoint. In the proxy mode, you can use proxy-pass to redirect <platform>.api.riotgames.com requests directly to cosmic-radiance. You need to use http. |
@@ -160,7 +160,7 @@ There are several .env variables which can fine tune cosmic-radiance. Some are r
 | PROMETHEUS             | Either `ON` or `OFF`. Disabled by default. Enable to get prometheus statistics                                                                                                                                                                                                       |
 | POLLING_INTERVAL       | The time in milliseconds in which the main loop checks whether new requests can be fired and rate limits can be updated. Default is 10ms.                                                                                                                                            |
 | ADDITIONAL_WINDOW_SIZE | The window size in milliseconds that gets added on top of Riot Games' windows in order to account for latency. Default is 125ms.                                                                                                                                                     |
-
+| USER_AGENT             | The user agent that cosmic-radiance uses to fire requests to the Riot Games API. Default is `cosmic-radiance/<version> (+https://github.com/DarkIntaqt/cosmic-radiance)`.                                                                                                            |
 Check the [.env.example](https://github.com/DarkIntaqt/cosmic-radiance/blob/main/.env.example) for a more detailed description. 
 
 ## Error Codes

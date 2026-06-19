@@ -26,3 +26,5 @@ const MAX_UTILIZATION_FACTOR = 1
 
 const MAX_BATCH_SIZE_NORMAL = 25
 const MAX_BATCH_SIZE_PRIORITY = MAX_BATCH_SIZE_NORMAL * 5
+
+const DEFAULT_USER_AGENT = "cosmic-radiance/" + VERSION + " (+https://github.com/DarkIntaqt/cosmic-radiance)"

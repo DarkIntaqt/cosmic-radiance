@@ -21,6 +21,7 @@ type RateLimiterOptions struct {
 	PrometheusEnabled    bool
 	PollingInterval      time.Duration
 	AdditionalWindowSize time.Duration
+	UserAgent            string
 }
 
 func ValidateRateLimiterOptions(opts *RateLimiterOptions) {
@@ -49,4 +50,7 @@ func ValidateRateLimiterOptions(opts *RateLimiterOptions) {
 		panic("Additional window size must be greater than or equal to 0")
 	}
 
+	if opts.UserAgent == "" {
+		panic("UserAgent should not be empty")
+	}
 }
