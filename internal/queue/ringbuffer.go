@@ -53,8 +53,9 @@ func (rb *RingBuffer) Count() int64 {
 }
 
 func (rb *RingBuffer) Refund(keyId int, timestamp time.Time) {
-	if keyId < 0 || keyId >= len(*rb.Limits) {
+	limits := *rb.Limits
+	if keyId < 0 || keyId >= len(limits) {
 		return
 	}
-	(*rb.Limits)[keyId].Refund(timestamp)
+	limits[keyId].Refund(timestamp)
 }

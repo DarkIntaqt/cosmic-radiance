@@ -82,7 +82,7 @@ func (rb *RingBuffer) canDequeue(now time.Time) int {
 }
 
 func (rb *RingBuffer) needsUpdate(keyId int, now time.Time) bool {
-	limits := rb.Limits
+	limits := *rb.Limits
 
 	// Key validation can be skipped, IT HAS TO EXISTS
 	// if keyId < 0 || keyId >= len(*limits) {
@@ -90,5 +90,5 @@ func (rb *RingBuffer) needsUpdate(keyId int, now time.Time) bool {
 	// }
 
 	// Check if the key's rate limit needs an update
-	return (*limits)[keyId].NeedsUpdate(now)
+	return limits[keyId].NeedsUpdate(now)
 }

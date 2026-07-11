@@ -24,7 +24,7 @@ func (rb *RingBuffer) purge(nowTime time.Time) int {
 		}
 
 		count++
-		rb.dequeue()
+		rb.dequeue().FailedResponse(&nowTime)
 	}
 }
 
@@ -42,7 +42,7 @@ func (rb *RingBuffer) purgeAndPeek(nowTime time.Time) *request.Request {
 			return req
 		}
 
-		rb.dequeue()
+		rb.dequeue().FailedResponse(&nowTime)
 	}
 }
 
@@ -61,6 +61,8 @@ func (rb *RingBuffer) purgeAndDequeue(nowTime time.Time) *request.Request {
 
 		if now < req.Expire {
 			return req
+		} else {
+			req.FailedResponse(&nowTime)
 		}
 	}
 }
