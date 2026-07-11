@@ -11,6 +11,7 @@ import (
 // purge removes all outdated entries by peeking into them, then return amount of purged entries
 func (rb *RingBuffer) purge(nowTime time.Time) int {
 	now := nowTime.UnixMilli()
+	retry := nowTime.Add(1 * time.Second)
 	count := 0
 
 	for {
@@ -24,13 +25,14 @@ func (rb *RingBuffer) purge(nowTime time.Time) int {
 		}
 
 		count++
-		rb.dequeue().FailedResponse(&nowTime)
+		rb.dequeue().FailedResponse(&retry)
 	}
 }
 
 // purgeAndPeek removes all outdated entries and returns the next valid request.
 func (rb *RingBuffer) purgeAndPeek(nowTime time.Time) *request.Request {
 	now := nowTime.UnixMilli()
+	retry := nowTime.Add(1 * time.Second)
 
 	for {
 		req := rb.peek()
@@ -42,13 +44,14 @@ func (rb *RingBuffer) purgeAndPeek(nowTime time.Time) *request.Request {
 			return req
 		}
 
-		rb.dequeue().FailedResponse(&nowTime)
+		rb.dequeue().FailedResponse(&retry)
 	}
 }
 
 // purgeAndDequeue removes all outdated entries and dequeues the next valid request.
 func (rb *RingBuffer) purgeAndDequeue(nowTime time.Time) *request.Request {
 	now := nowTime.UnixMilli()
+	retry := nowTime.Add(1 * time.Second)
 
 	for {
 		req := rb.dequeue()
@@ -62,7 +65,7 @@ func (rb *RingBuffer) purgeAndDequeue(nowTime time.Time) *request.Request {
 		if now < req.Expire {
 			return req
 		} else {
-			req.FailedResponse(&nowTime)
+			req.FailedResponse(&retry)
 		}
 	}
 }
