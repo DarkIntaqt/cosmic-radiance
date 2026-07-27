@@ -167,11 +167,12 @@ Check the [.env.example](https://github.com/DarkIntaqt/cosmic-radiance/blob/main
 
 All error codes are returned as by the Riot Games API. There were a few additional error codes added. 
 
-|  Code   | Where to be found | What does this mean                                              |
-| :-----: | ----------------- | ---------------------------------------------------------------- |
-| **408** | Metrics           | The request timed out. Check the `Retry-After` header.           |
-| **499** | Metrics           | The requesting client dropped the request.                       |
-| **500** | Metrics and Proxy | The request to the Riot Games API failed before it was executed. |
+|  Code   | Where to be found   | What does this mean                                                                                      |
+| :-----: | ------------------- | -------------------------------------------------------------------------------------------------------- |
+| **408** | Metrics (429 Proxy) | The request timed out. due to an internal timeout. Check the `Retry-After` header.                       |
+| **430** | Metrics (429 proxy) | The request would hit the rate limit within its timeout and was dropped. Check the `Retry-After` header. |
+| **499** | Metrics             | The requesting client dropped the request.                                                               |
+| **500** | Metrics and Proxy   | The request to the Riot Games API failed before it was executed.                                         |
 
 ## Contributing
 
