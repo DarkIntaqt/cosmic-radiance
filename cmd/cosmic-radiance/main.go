@@ -37,8 +37,8 @@ func getApiKeys() []options.KeyKV {
 		name := fmt.Sprintf("Key %d", i+1)
 		splits := strings.Split(key, "=")
 		if len(splits) == 2 && strings.Contains(splits[1], "RGAPI") {
-			name = splits[0]
-			key = splits[1]
+			name = strings.TrimSpace(splits[0])
+			key = strings.TrimSpace(splits[1])
 		}
 
 		apiKeys[i] = options.KeyKV{
