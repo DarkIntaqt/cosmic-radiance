@@ -1,6 +1,6 @@
 # Cosmic-Radiance
 
-![Go Version](https://img.shields.io/badge/go-1.24.4+-blue?style=flat-square)
+![Go Version](https://img.shields.io/badge/go-1.25+-blue?style=flat-square)
 [![Issues](https://img.shields.io/github/issues/DarkIntaqt/cosmic-radiance?style=flat-square)](https://github.com/DarkIntaqt/cosmic-radiance/issues)
 [![License](https://img.shields.io/github/license/darkintaqt/cosmic-radiance?style=flat-square)](https://github.com/DarkIntaqt/cosmic-radiance/blob/main/LICENSE)
 
