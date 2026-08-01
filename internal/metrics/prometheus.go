@@ -22,7 +22,7 @@ func InitMetrics() {
 			Name: "key_response_code_count",
 			Help: "Number of responses by key ID, platform, endpoint and response code",
 		},
-		[]string{"key_id", "platform", "endpoint", "response_code"},
+		[]string{"key_name", "platform", "endpoint", "response_code"},
 	)
 	queueSize = promauto.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -47,20 +47,14 @@ func InitMetrics() {
 	)
 }
 
-func UpdateResponseCodes(keyId int, platform string, endpoint string, responseCode int) {
+func UpdateResponseCodes(keyName string, platform string, endpoint string, responseCode int) {
 	code := strconv.Itoa(responseCode)
 	endpoint = "/" + endpoint
 
-	if keyId >= 0 {
-		keyResponseCodes.WithLabelValues(strconv.Itoa(keyId+1), platform, endpoint, code).Inc()
-	} else {
-		keyResponseCodes.WithLabelValues("NO-KEY", platform, endpoint, code).Inc()
-	}
-
+	keyResponseCodes.WithLabelValues(keyName, platform, endpoint, code).Inc()
 }
 
 func UpdateQueueSizes(qm *queue.QueueManager) {
-
 	normal := 0
 	priority := 0
 
@@ -69,15 +63,15 @@ func UpdateQueueSizes(qm *queue.QueueManager) {
 			id := endpoint.Id
 			method := endpoint.Method
 
-			if queue, Ok := qm.Queues[id]; Ok {
-				queueSize.WithLabelValues(platform, method, "normal").Set(float64(queue.Size()))
-				queueFilled.WithLabelValues(platform, method, "normal").Set(float64(queue.Count()))
+			if curQueue, Ok := qm.Queues[id]; Ok {
+				queueSize.WithLabelValues(platform, method, "normal").Set(float64(curQueue.Size()))
+				queueFilled.WithLabelValues(platform, method, "normal").Set(float64(curQueue.Count()))
 				normal++
 			}
 
-			if queue, Ok := qm.PriorityQueues[id]; Ok {
-				queueSize.WithLabelValues(platform, method, "high").Set(float64(queue.Size()))
-				queueFilled.WithLabelValues(platform, method, "high").Set(float64(queue.Count()))
+			if curQueue, Ok := qm.PriorityQueues[id]; Ok {
+				queueSize.WithLabelValues(platform, method, "high").Set(float64(curQueue.Size()))
+				queueFilled.WithLabelValues(platform, method, "high").Set(float64(curQueue.Count()))
 				priority++
 			}
 		}
@@ -85,5 +79,4 @@ func UpdateQueueSizes(qm *queue.QueueManager) {
 
 	queueCount.WithLabelValues("normal").Set(float64(normal))
 	queueCount.WithLabelValues("high").Set(float64(priority))
-
 }

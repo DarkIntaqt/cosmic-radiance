@@ -18,7 +18,7 @@ func (rl *RateLimiter) riotApiRequest(region string, method string, queryParams 
 	}
 
 	req.Header.Set("User-Agent", rl.opts.UserAgent)
-	req.Header.Set("X-Riot-Token", rl.opts.ApiKeys[keyId])
+	req.Header.Set("X-Riot-Token", rl.opts.ApiKeys[keyId].ApiKey)
 	req.Header.Set("Accept-Encoding", "gzip") // accept gzip
 
 	resp, err := rl.client.Do(req)

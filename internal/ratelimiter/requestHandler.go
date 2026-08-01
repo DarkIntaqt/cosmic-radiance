@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/DarkIntaqt/cosmic-radiance/configs"
 	"github.com/DarkIntaqt/cosmic-radiance/internal/metrics"
 	"github.com/DarkIntaqt/cosmic-radiance/internal/request"
 	"github.com/DarkIntaqt/cosmic-radiance/internal/schema"
@@ -77,7 +78,7 @@ func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case <-r.Context().Done():
 		req.Invalidate()
 		if prometheusEnabled {
-			metrics.UpdateResponseCodes(-1, syntax.Platform, syntax.Endpoint, 499)
+			metrics.UpdateResponseCodes(configs.DEFAULT_NO_KEY, syntax.Platform, syntax.Endpoint, 499)
 		}
 
 	// The request timed out (internally)
@@ -85,7 +86,7 @@ func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// fmt.Println("ctx cancelled")
 		http.Error(w, "Request dropped due to timeout", http.StatusTooManyRequests)
 		if prometheusEnabled {
-			metrics.UpdateResponseCodes(-1, syntax.Platform, syntax.Endpoint, 408)
+			metrics.UpdateResponseCodes(configs.DEFAULT_NO_KEY, syntax.Platform, syntax.Endpoint, 408)
 		}
 
 	// The request is allowed to be executed
@@ -100,7 +101,7 @@ func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			// fmt.Println("timeout exceeded")
 			http.Error(w, "Rate limit exceeded", http.StatusTooManyRequests)
 			if prometheusEnabled {
-				metrics.UpdateResponseCodes(response.KeyId, syntax.Platform, syntax.Endpoint, 430)
+				metrics.UpdateResponseCodes(configs.DEFAULT_NO_KEY, syntax.Platform, syntax.Endpoint, 430)
 			}
 			return
 		}
@@ -112,7 +113,7 @@ func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Failed to make API request", http.StatusInternalServerError)
 
 			if prometheusEnabled {
-				metrics.UpdateResponseCodes(response.KeyId, syntax.Platform, syntax.Endpoint, 500)
+				metrics.UpdateResponseCodes(rl.opts.ApiKeys[response.KeyId].Name, syntax.Platform, syntax.Endpoint, 500)
 			}
 			// rl.refundRequest(syntax, priority, response.KeyId, startTime)
 			return
@@ -120,7 +121,7 @@ func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		// Report prometheus statistics, if enabled
 		if prometheusEnabled {
-			metrics.UpdateResponseCodes(response.KeyId, syntax.Platform, syntax.Endpoint, riotApiRequest.StatusCode)
+			metrics.UpdateResponseCodes(rl.opts.ApiKeys[response.KeyId].Name, syntax.Platform, syntax.Endpoint, riotApiRequest.StatusCode)
 		}
 		defer riotApiRequest.Body.Close()
 

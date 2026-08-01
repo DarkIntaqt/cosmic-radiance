@@ -12,8 +12,13 @@ const (
 	ProxyMode CosmicRadianceRequestMode = true
 )
 
+type KeyKV struct {
+	ApiKey string
+	Name   string
+}
+
 type RateLimiterOptions struct {
-	ApiKeys              []string
+	ApiKeys              []KeyKV
 	Port                 int
 	RequestMode          CosmicRadianceRequestMode
 	Timeout              time.Duration
