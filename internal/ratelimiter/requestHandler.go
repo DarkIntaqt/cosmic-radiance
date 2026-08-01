@@ -31,22 +31,22 @@ func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// Determine the endpoints by using the proxy mode
 	if rl.opts.RequestMode == options.ProxyMode {
-		schema, err := schema.NewProxySyntax(r.URL.Host, path)
+		proxySyntax, err := schema.NewProxySyntax(r.URL.Host, path)
 		if err != nil {
 			w.Header().Set("Retry-After", "60")
 			http.Error(w, "Invalid path", http.StatusBadRequest)
 			return
 		}
 
-		syntax = schema
+		syntax = proxySyntax
 	} else {
-		schema, err := schema.NewPathSyntax(path)
+		pathSyntax, err := schema.NewPathSyntax(path)
 		if err != nil {
 			w.Header().Set("Retry-After", "60")
 			http.Error(w, "Invalid path", http.StatusBadRequest)
 			return
 		}
-		syntax = schema
+		syntax = pathSyntax
 	}
 
 	priority := request.NormalPriority
