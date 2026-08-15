@@ -55,7 +55,7 @@ func GetEnvInt(key string) int {
 }
 
 func ValidateRequestMode() options.CosmicRadianceRequestMode {
-	mode := GetEnvString("MODE")
+	mode := GetSoftEnvString("MODE", "PATH")
 
 	switch strings.ToLower(mode) {
 	case "path":
