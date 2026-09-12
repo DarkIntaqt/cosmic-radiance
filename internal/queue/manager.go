@@ -1,7 +1,7 @@
 package queue
 
 import (
-	"log"
+	"log/slog"
 	"time"
 
 	"github.com/DarkIntaqt/cosmic-radiance/configs"
@@ -107,9 +107,9 @@ func (qm *QueueManager) EnqueueRequest(req *request.Request, priority request.Pr
 		groups := qm.RateLimitGroups[syntax.Id]
 		queue[syntax.Id] = newRingBuffer(groups, priority, qm.opts.PriorityQueueSize)
 		if priority == request.HighPriority {
-			log.Printf("Queue #P-%s created for %s/%s with size of %d\n", syntax.Id, syntax.Platform, syntax.Endpoint, queue[syntax.Id].size)
+			slog.Info("Priority queue created", "queueId", "P-"+syntax.Id, "platform", syntax.Platform, "endpoint", syntax.Endpoint, "size", queue[syntax.Id].size)
 		} else {
-			log.Printf("Queue #%s created for %s/%s with size of %d\n", syntax.Id, syntax.Platform, syntax.Endpoint, queue[syntax.Id].size)
+			slog.Info("Queue created", "queueId", syntax.Id, "platform", syntax.Platform, "endpoint", syntax.Endpoint, "size", queue[syntax.Id].size)
 		}
 	}
 
@@ -152,7 +152,7 @@ func (qm *QueueManager) AdjustQueueSize() {
 				newQueue.Enqueue(queue.Dequeue(now))
 			}
 
-			log.Printf("Queue #%s adjusted size from %d to %d\n", key, queue.size, newQueue.size)
+			slog.Debug("Queue adjusted size", "queueId", key, "from", queue.size, "to", newQueue.size)
 			go queue.drain()
 			qm.Queues[key] = newQueue
 		}
@@ -169,7 +169,7 @@ func (qm *QueueManager) AdjustQueueSize() {
 				newQueue.Enqueue(queue.Dequeue(now))
 			}
 
-			log.Printf("Queue #P-%s adjusted size from %d to %d\n", key, queue.size, newQueue.size)
+			slog.Debug("Priority queue adjusted size", "queueId", "P-"+key, "from", queue.size, "to", newQueue.size)
 			go queue.drain()
 			qm.PriorityQueues[key] = newQueue
 		}
@@ -182,18 +182,18 @@ func (qm *QueueManager) CleanUp() {
 	for key, queue := range qm.getQueues(request.NormalPriority) {
 		if queue.Count() == 0 && queue.lastUpdated.Before(now.Add(-configs.QUEUE_INACTIVITY)) {
 			// If the queue is empty and hasn't been updated in a while, we can remove it
-			log.Printf("Queue #%s removed due to inactivity\n", key)
+			slog.Info("Queue removed due to inactivity", "queueId", key)
 			qm.Queues[key].drain()
 			delete(qm.Queues, key)
 		}
 	}
+
 	for key, queue := range qm.getQueues(request.HighPriority) {
 		if queue.Count() == 0 && queue.lastUpdated.Before(now.Add(-configs.QUEUE_INACTIVITY)) {
 			// If the queue is empty and hasn't been updated in a while, we can remove it
-			log.Printf("Queue #P-%s removed due to inactivity\n", key)
+			slog.Info("Priority queue removed due to inactivity", "queueId", "P-"+key)
 			qm.PriorityQueues[key].drain()
 			delete(qm.PriorityQueues, key)
 		}
 	}
-
 }

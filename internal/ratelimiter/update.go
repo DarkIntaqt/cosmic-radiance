@@ -1,6 +1,7 @@
 package ratelimiter
 
 import (
+	"log/slog"
 	"math"
 	"net/http"
 	"time"
@@ -46,6 +47,10 @@ func (rl *RateLimiter) updateRatelimits(syntax *schema.Syntax, response *http.Re
 					case "method":
 						limitType = MethodLimit
 					}
+
+					slog.Debug("Received 429 Too Many Requests with Retry-After header", "queueId", syntax.Id, "platform", syntax.Platform, "endpoint", syntax.Endpoint, "keyId", keyId, "retryAfter", retryAfter, "limitType", rt)
+				} else {
+					slog.Debug("Received 429 Too Many Requests with Retry-After header but no X-Rate-Limit-Type header", "queueId", syntax.Id, "platform", syntax.Platform, "endpoint", syntax.Endpoint, "keyId", keyId, "retryAfter", retryAfter)
 				}
 			}
 		}

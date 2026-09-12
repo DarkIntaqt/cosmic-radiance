@@ -161,6 +161,8 @@ There are several .env variables which can fine tune cosmic-radiance. Some are r
 | POLLING_INTERVAL       | The time in milliseconds in which the main loop checks whether new requests can be fired and rate limits can be updated. Default is 10ms.                                                                                                                                            |
 | ADDITIONAL_WINDOW_SIZE | The window size in milliseconds that gets added on top of Riot Games' windows in order to account for latency. Default is 125ms.                                                                                                                                                     |
 | USER_AGENT             | The user agent that cosmic-radiance uses to fire requests to the Riot Games API. Default is `cosmic-radiance/<version> (+https://github.com/DarkIntaqt/cosmic-radiance)`.                                                                                                            |
+| LOG_LEVEL              | The log level that cosmic-radiance uses. Default is `INFO`. Possible values are `DEBUG`, `INFO`, `WARN`, `ERROR`.                                                                                                                                                                    |
+
 Check the [.env.example](https://github.com/DarkIntaqt/cosmic-radiance/blob/main/.env.example) for a more detailed description. 
 
 ## Error Codes
@@ -169,7 +171,7 @@ All error codes are returned as by the Riot Games API. There were a few addition
 
 |  Code   | Where to be found   | What does this mean                                                                                      |
 | :-----: | ------------------- | -------------------------------------------------------------------------------------------------------- |
-| **408** | Metrics (429 Proxy) | The request timed out. due to an internal timeout. Check the `Retry-After` header.                       |
+| **408** | Metrics (429 Proxy) | The request timed out due to an internal timeout. Check the `Retry-After` header.                        |
 | **430** | Metrics (429 proxy) | The request would hit the rate limit within its timeout and was dropped. Check the `Retry-After` header. |
 | **499** | Metrics             | The requesting client dropped the request.                                                               |
 | **500** | Metrics and Proxy   | The request to the Riot Games API failed before it was executed.                                         |

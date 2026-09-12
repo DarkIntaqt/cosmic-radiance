@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -83,7 +83,6 @@ func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// The request timed out (internally)
 	case <-ctx.Done():
-		// fmt.Println("ctx cancelled")
 		http.Error(w, "Request dropped due to timeout", http.StatusTooManyRequests)
 		if prometheusEnabled {
 			metrics.UpdateResponseCodes(configs.DEFAULT_NO_KEY, syntax.Platform, syntax.Endpoint, 408)
@@ -95,10 +94,11 @@ func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// startTime := time.Now().Add(time.Millisecond * -5)
 
 		if response.KeyId == request.RequestFailed {
+			slog.Debug("Request failed due to rate limit", "queueId", syntax.Id, "uri", r.URL, "platform", syntax.Platform, "endpoint", syntax.Endpoint, "retryAfter", response.RetryAfter)
 			if response.RetryAfter != nil {
 				w.Header().Set("Retry-After", fmt.Sprintf("%d", int(time.Until(*response.RetryAfter).Round(time.Second).Seconds())))
 			}
-			// fmt.Println("timeout exceeded")
+
 			http.Error(w, "Rate limit exceeded", http.StatusTooManyRequests)
 			if prometheusEnabled {
 				metrics.UpdateResponseCodes(configs.DEFAULT_NO_KEY, syntax.Platform, syntax.Endpoint, 430)
@@ -108,7 +108,7 @@ func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		riotApiRequest, err := rl.riotApiRequest(syntax.Platform, syntax.Method, r.URL.Query(), response.KeyId)
 		if err != nil {
-			log.Println(err)
+			slog.Error("Failed to make API request", "error", err)
 			w.Header().Set("Retry-After", "0")
 			http.Error(w, "Failed to make API request", http.StatusInternalServerError)
 
@@ -148,8 +148,10 @@ func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// Write response 1:1 to keep gzip
 		w.WriteHeader(riotApiRequest.StatusCode)
 		if _, err := io.Copy(w, riotApiRequest.Body); err != nil {
-			log.Printf("Error writing response: %v", err)
+			slog.Error("Error writing response", "error", err)
 		}
+
+		slog.Debug("Request completed", "queueId", syntax.Id, "uri", r.URL, "platform", syntax.Platform, "endpoint", syntax.Endpoint, "statusCode", riotApiRequest.StatusCode, "keyId", response.KeyId)
 	}
 }
 

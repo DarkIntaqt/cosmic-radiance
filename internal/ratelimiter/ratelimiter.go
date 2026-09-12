@@ -3,7 +3,8 @@ package ratelimiter
 import (
 	"context"
 	"fmt"
-	"log"
+
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -72,7 +73,7 @@ func (rl *RateLimiter) Start() {
 	}
 	rl.started = true
 
-	log.Printf("Running Cosmic-Radiance v%s on :%d\n", configs.VERSION, rl.opts.Port)
+	slog.Info("Running Cosmic-Radiance", "version", configs.VERSION, "port", rl.opts.Port)
 
 	// Create all channels,
 	rl.incomingChannel = make(chan IncomingRequest)
@@ -88,7 +89,7 @@ func (rl *RateLimiter) Start() {
 
 	// Start the main loop in a goroutine
 	go func() {
-		log.Println("Starting main loop")
+		slog.Info("Starting main loop")
 		rl.mainLoop(ctx)
 	}()
 
@@ -100,10 +101,11 @@ func (rl *RateLimiter) Start() {
 
 	// Serve the http proxy
 	go func() {
-		log.Println("Starting proxy")
+		slog.Info("Starting proxy")
 
 		if err := proxy.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Proxy crashed: %v\n", err)
+			slog.Error("Proxy crashed", "error", err)
+			os.Exit(1)
 		}
 	}()
 
@@ -112,7 +114,7 @@ func (rl *RateLimiter) Start() {
 
 	// Printing an empty line to distinct between before and after the shutdown. Also prevents ^C to be visible in another log message
 	println("")
-	log.Println("Shutting down...")
+	slog.Info("Shutting down...")
 
 	// Cancel the context to stop the goroutine
 	cancelCtx()
@@ -123,9 +125,9 @@ func (rl *RateLimiter) Start() {
 
 	// Shutdown the http proxy
 	if err := proxy.Shutdown(stop); err != nil {
-		log.Printf("Proxy forced to shutdown: %v\n", err)
+		slog.Info("Proxy forced to shutdown: %v\n", "error", err)
 	} else {
-		log.Println("Bye bye from the proxy")
+		slog.Info("Bye bye from the proxy")
 	}
 
 	close(rl.incomingChannel)
@@ -137,10 +139,10 @@ func (rl *RateLimiter) Start() {
 	select {
 	case <-rl.close:
 	case <-stop.Done():
-		log.Println("The goroutine didn't stop in time, we forcefully shutting it down now")
+		slog.Info("The goroutine didn't stop in time, we forcefully shutting it down now")
 	}
 
-	log.Println("Successfully shut down")
+	slog.Info("Successfully shut down")
 }
 
 func (rl *RateLimiter) Stop() {
@@ -190,7 +192,7 @@ func (rl *RateLimiter) mainLoop(ctx context.Context) {
 			rl.queueManager.Drain()
 
 			// This is intended and absolutely necessary
-			log.Println("Bye bye from the main loop")
+			slog.Info("Bye bye from the main loop")
 
 			// Send data to notify the main thread that worker has finished
 			rl.close <- struct{}{}
@@ -206,6 +208,5 @@ func (rl *RateLimiter) mainLoop(ctx context.Context) {
 			rl.processQueues(rl.queueManager.PriorityQueues)
 			rl.processQueues(rl.queueManager.Queues)
 		}
-
 	}
 }

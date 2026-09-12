@@ -1,7 +1,8 @@
 package resource
 
 import (
-	"log"
+	"fmt"
+	"log/slog"
 	"math"
 	"strconv"
 	"strings"
@@ -67,7 +68,7 @@ func (rlc *RateLimitCategory) Update(limit string, count string, retryAfter *tim
 			// We puddle along the original limit
 			// If the limit Riot gave us is higher than ours (which shouldnt be happening), update ours accordingly
 			if rlc.RateLimits[i].Limit != capacity && currentReqs < current {
-				log.Printf("Updating current rate limit from %d to %d with window %d\n", currentReqs, current, duration)
+				slog.Debug("Updating current rate limit", "from", currentReqs, "to", current, "window", duration)
 				currentReqs = current
 			}
 
@@ -112,18 +113,15 @@ func (rlc *RateLimitCategory) Update(limit string, count string, retryAfter *tim
 	}
 
 	if applyRetryAfter && retryAfter != nil {
-		log.Println("Applying Retry-After:", (*retryAfter).Format(time.RFC3339))
+		slog.Debug("Applying Retry-After", "retryAfter", (*retryAfter).Format(time.RFC3339))
 		rlc.LockedUntil = (*retryAfter)
 	}
 
 	limitLen := len(limits)
 	if limitLen < len(rlc.RateLimits) {
-		log.Println("limit", limit)
-		log.Println("count", count)
-		log.Printf("%+v", rlc.RateLimits)
-		log.Printf("Dropping rate limit to %d. Got %d limits, but have %d stored\n", limitLen, limitLen, len(rlc.RateLimits))
+		slog.Debug(fmt.Sprintf("Dropping rate limit to %d. Got %d limits, but have %d stored\n", limitLen, limitLen, len(rlc.RateLimits)), "count", count, "limit", limit, "rlc.RateLimits", rlc.RateLimits)
 		rlc.RateLimits = rlc.RateLimits[:limitLen]
-		log.Printf("%+v", rlc.RateLimits)
+		slog.Debug("New rate limit state", "rlc.RateLimits", rlc.RateLimits)
 	}
 
 	return peakCapacity

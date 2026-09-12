@@ -1,8 +1,10 @@
 package ratelimiter
 
 import (
+	"log/slog"
 	"net/http"
 	"net/url"
+	"time"
 )
 
 func (rl *RateLimiter) riotApiRequest(region string, method string, queryParams url.Values, keyId int) (*http.Response, error) {
@@ -10,7 +12,11 @@ func (rl *RateLimiter) riotApiRequest(region string, method string, queryParams 
 	// append the api key as a header
 
 	// build uri with region, method, and query parameters
-	uri := "https://" + region + ".api.riotgames.com/" + method + "?" + queryParams.Encode()
+	start := time.Now()
+	uri := "https://" + region + ".api.riotgames.com/" + method
+	if params := queryParams.Encode(); params != "" {
+		uri += "?" + params
+	}
 
 	req, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
@@ -25,6 +31,8 @@ func (rl *RateLimiter) riotApiRequest(region string, method string, queryParams 
 	if err != nil {
 		return nil, err
 	}
+
+	slog.Debug("Request sent to Riot Games API", "uri", uri, "keyId", keyId, "statusCode", resp.StatusCode, "duration", time.Since(start))
 
 	return resp, nil
 }

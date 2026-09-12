@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/DarkIntaqt/cosmic-radiance/configs"
@@ -26,6 +27,7 @@ func main() {
 		UserAgent: utils.GetSoftEnvString("USER_AGENT", configs.DEFAULT_USER_AGENT),
 	})
 
+	slog.SetLogLoggerLevel(utils.GetLogLevel())
 	limiter.Start()
 }
 
