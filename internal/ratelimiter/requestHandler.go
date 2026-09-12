@@ -125,7 +125,7 @@ func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		defer riotApiRequest.Body.Close()
 
-		if riotApiRequest.StatusCode == http.StatusTooManyRequests || (response.Update && riotApiRequest.StatusCode == http.StatusOK) {
+		if riotApiRequest.StatusCode == http.StatusTooManyRequests || (response.Update && riotApiRequest.StatusCode <= 500) {
 			rl.updateRatelimits(syntax, riotApiRequest, response.KeyId, priority)
 		}
 		// else if riotApiRequest.StatusCode >= 500 {

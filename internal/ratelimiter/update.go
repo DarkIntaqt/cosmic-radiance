@@ -27,7 +27,7 @@ type Update struct {
 }
 
 func (rl *RateLimiter) updateRatelimits(syntax *schema.Syntax, response *http.Response, keyId int, priority request.Priority) {
-	if syntax == nil || response == nil {
+	if syntax == nil || response == nil || response.Header.Get("X-App-Rate-Limit") == "" || response.Header.Get("X-App-Rate-Limit-Count") == "" || response.Header.Get("X-Method-Rate-Limit") == "" || response.Header.Get("X-Method-Rate-Limit-Count") == "" {
 		return
 	}
 
